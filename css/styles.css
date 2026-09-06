@@ -1,0 +1,163 @@
+    @font-face {
+      font-family: 'S-CoreDream';
+      font-weight: 300;
+      font-style: normal;
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-3Light.woff') format('woff');
+    }
+    @font-face {
+      font-family: 'S-CoreDream';
+      font-weight: 500;
+      font-style: normal;
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-5Medium.woff') format('woff');
+    }
+    @font-face {
+      font-family: 'S-CoreDream';
+      font-weight: 700;
+      font-style: normal;
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-6Bold.woff') format('woff');
+    }
+    @font-face {
+      font-family: 'S-CoreDream';
+      font-weight: 900;
+      font-style: normal;
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-8Heavy.woff') format('woff');
+    }
+
+    :root {
+      --navy: #08233D;
+      --navy-dark: #05182B;
+      --navy-sub: #0D2E4F;
+      --gold: #D4A23B;
+      --gold-dark: #D17D19;
+      --cream: #FBF7EF;
+      --cream-card: #FFFAF2;
+      --line: #EAE5DB;
+      --text: #161616;
+      --muted: #77736C;
+      --danger: #E54D42;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'S-CoreDream', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: #E5E7EB;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Phone Mockup Frame */
+    .phone-container {
+      width: min(100%, 412px);
+      height: 100vh;
+      max-height: 860px;
+      background: var(--cream);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.12);
+      overflow: hidden;
+    }
+
+    @media (min-width: 640px) {
+      body {
+        padding: 18px 0;
+      }
+      .phone-container {
+        border-radius: 38px;
+        border: 7px solid #1E293B;
+      }
+    }
+
+    /* Screen Transition */
+    .screen-view {
+      flex: 1;
+      height: calc(100% - 66px);
+      overflow-y: auto;
+      display: none;
+      flex-direction: column;
+      padding-bottom: 8px;
+    }
+
+    .screen-view.active {
+      display: flex;
+      animation: screenFade 0.2s ease-out;
+    }
+
+    @keyframes screenFade {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Clean Scrollbar */
+    .screen-view::-webkit-scrollbar {
+      width: 3px;
+    }
+    .screen-view::-webkit-scrollbar-thumb {
+      background: #D1D5DB;
+      border-radius: 3px;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-tab-bar {
+      height: 66px;
+      background: rgba(255, 255, 255, 0.98);
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      align-items: center;
+      z-index: 30;
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      color: #8E8E93;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 10.5px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      height: 100%;
+    }
+
+    .tab-btn.active {
+      color: var(--navy);
+      font-weight: 700;
+    }
+
+    .tab-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2;
+    }
+
+    /* Camera Scanner Animation */
+    @keyframes scanRay {
+      0% { top: 12%; opacity: 0.3; }
+      50% { top: 82%; opacity: 1; }
+      100% { top: 12%; opacity: 0.3; }
+    }
+    .scan-laser {
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      height: 2px;
+      background: #38BDF8;
+      box-shadow: 0 0 12px #38BDF8, 0 0 4px #38BDF8;
+      animation: scanRay 2.2s infinite ease-in-out;
+    }

@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SPOT - 똑똑한 소비 매니저</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Screen Selector for Demonstration -->
+  <aside class="w-full max-w-[412px] mb-2 px-3 py-1.5 bg-slate-800 text-white text-xs flex justify-between items-center rounded-lg shadow-sm">
+    <span class="font-bold tracking-tight text-slate-200">화면 바로가기</span>
+    <select id="screenRouter" class="bg-slate-700 text-amber-300 font-bold px-2 py-1 rounded border border-slate-600 focus:outline-none text-[11px]">
+      <option value="view-home">1. 홈 (Home)</option>
+      <option value="view-scan">2. 영수증 스캔 (Scan)</option>
+      <option value="view-result">3. 분석 결과 (OCR Result)</option>
+      <option value="view-analytics">4. 소비 분석 (Analytics)</option>
+      <option value="view-map">5. 소비 지도 (Map)</option>
+      <option value="view-ai">6. AI 소비 코치 (Coach)</option>
+      <option value="view-whatif">7. What-if 시뮬레이션</option>
+      <option value="view-ingredients">8. 성분 분석 (Ingredients)</option>
+      <option value="view-allergy-alert">9. 알레르기 주의 (Alert)</option>
+      <option value="view-profile">10. 내 정보 (Profile)</option>
+      <option value="view-allergy-mgmt">11. 알레르기 관리</option>
+      <option value="view-receipt-detail">12. 영수증 상세</option>
+    </select>
+  </aside>
+
+  <!-- Mobile Frame -->
+  <div class="phone-container">
+
+    <!-- ================= 1. HOME VIEW (Zero Scroll Fitted) ================= -->
+    <section id="view-home" class="screen-view active justify-between px-4 pt-3.5 pb-2">
+      <!-- Top Bar -->
+      <div>
+        <header class="flex justify-between items-center mb-2.5">
+          <div class="text-xl font-black tracking-tighter text-[#08233D]">SPOT</div>
+          <div class="flex items-center gap-1">
+            <!-- Camera Quick Scan Button -->
+            <button data-screen="view-scan" title="영수증 스캔" class="p-1.5 rounded-full hover:bg-black/5 text-[#08233D]">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3" stroke-width="2"/></svg>
+            </button>
+            <!-- Notification Bell -->
+            <button data-screen="view-profile" class="p-1.5 rounded-full hover:bg-black/5 text-[#08233D] relative">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+              <span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#D17D19] rounded-full"></span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Compact Search Bar -->
+        <div class="h-9 bg-white/80 border border-[#EAE5DB] rounded-xl flex items-center px-3 gap-2 text-slate-400 text-xs shadow-none mb-2.5">
+          <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <span class="text-[11.5px]">상호명, 카테고리, 장소 검색</span>
+        </div>
+
+        <!-- Greeting -->
+        <div class="mb-2.5">
+          <div class="text-[11px] font-bold text-[#77736C]">유진님,</div>
+          <h1 class="text-[17px] font-black text-[#161616] leading-tight">오늘도 똑똑하게 소비해요.</h1>
+        </div>
+
+        <!-- Total Spending Card -->
+        <article class="bg-[#08233D] text-white p-4 rounded-2xl border border-[#0D2E4F] shadow-sm mb-2.5">
+          <div class="flex justify-between items-center text-[11px] opacity-80 mb-1">
+            <span>이번 달 총 지출</span>
+            <button data-screen="view-scan" class="text-[10px] bg-white/15 px-2 py-0.5 rounded text-amber-300 font-bold hover:bg-white/20 transition">영수증 등록 +</button>
+          </div>
+          <div class="text-2xl font-black tracking-tight mb-2.5">₩382,400</div>
+          <div class="flex justify-between text-[11px] opacity-90 font-medium mb-1.5">
+            <span>예산 <strong>₩600,000</strong></span>
+            <span class="font-black text-[#D4A23B]">64%</span>
+          </div>
+          <div class="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+            <div class="h-full bg-[#D4A23B] rounded-full" style="width: 64%;"></div>
+          </div>
+        </article>
+
+        <!-- AI Insight Card -->
+        <article data-screen="view-analytics" class="bg-gradient-to-br from-[#FFFAF0] to-[#F8EDDA] p-3.5 rounded-2xl border border-[#EAE5DB] cursor-pointer hover:opacity-95 transition mb-2.5">
+          <div class="flex items-center gap-1.5 text-[11px] font-black text-[#9B701C] mb-1">
+            <svg class="w-3.5 h-3.5 text-[#D17D19]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>AI 인사이트</span>
+          </div>
+          <div class="text-sm font-black text-[#161616] leading-tight">
+            식비 지출이 지난달보다 <strong class="text-[#D17D19]">18% 증가했어요.</strong>
+          </div>
+          <p class="text-[11px] text-[#77736C] mt-0.5">특히 배달 주문 증가가 주요 원인이에요.</p>
+          <div class="mt-2 text-[11px] font-bold text-[#08233D] flex items-center gap-1">
+            <span>분석 리포트 보기</span>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+          </div>
+        </article>
+
+        <!-- Purchase Volume Line Chart Card -->
+        <article class="bg-white p-3 rounded-2xl border border-[#EAE5DB] shadow-sm mb-2.5">
+          <div class="flex justify-between items-center mb-1.5">
+            <div class="flex items-center gap-1.5 text-[11px] font-black text-[#08233D]">
+              <svg class="w-3.5 h-3.5 text-[#08233D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+              <span>주간 구매량 추이</span>
+            </div>
+            <span class="text-[10px] font-black text-[#D17D19] bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60">이번 주 총 <strong class="text-[#D17D19]">14건</strong></span>
+          </div>
+
+          <!-- Line SVG Chart -->
+          <div class="relative w-full h-16 pt-1">
+            <svg class="w-full h-full overflow-visible" viewBox="0 0 280 50" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#D4A23B" stop-opacity="0.3"/>
+                  <stop offset="100%" stop-color="#D4A23B" stop-opacity="0.0"/>
+                </linearGradient>
+              </defs>
+              <!-- Chart Area Fill -->
+              <path d="M 10,38 Q 50,32 90,18 T 170,28 T 250,10 L 270,14 L 270,48 L 10,48 Z" fill="url(#chartGradient)"/>
+              <!-- Grid Line -->
+              <line x1="10" y1="48" x2="270" y2="48" stroke="#EAE5DB" stroke-width="1" stroke-dasharray="2,2"/>
+              <!-- Main Line Curve -->
+              <path d="M 10,38 Q 50,32 90,18 T 170,28 T 250,10 L 270,14" fill="none" stroke="#08233D" stroke-width="2.2" stroke-linecap="round"/>
+              <!-- Data Points -->
+              <circle cx="10" cy="38" r="2.5" fill="#08233D"/>
+              <circle cx="53" cy="32" r="2.5" fill="#08233D"/>
+              <circle cx="96" cy="18" r="2.5" fill="#08233D"/>
+              <circle cx="140" cy="28" r="2.5" fill="#08233D"/>
+              <circle cx="183" cy="28" r="2.5" fill="#08233D"/>
+              <circle cx="226" cy="12" r="2.5" fill="#08233D"/>
+              <!-- Highlight Point -->
+              <circle cx="270" cy="14" r="4" fill="#D17D19" stroke="#FFF" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <!-- X-Axis Labels -->
+          <div class="flex justify-between text-[9.5px] font-bold text-[#77736C] px-1 mt-0.5">
+            <span>월</span>
+            <span>화</span>
+            <span>수</span>
+            <span>목</span>
+            <span>금</span>
+            <span>토</span>
+            <span class="text-[#D17D19] font-black">오늘</span>
+          </div>
+        </article>
+      </div>
+
+      <!-- Recent Transactions Section -->
+      <div class="flex-1 flex flex-col justify-end">
+        <div class="flex justify-between items-center mb-1 px-1">
+          <h2 class="text-xs font-black text-[#161616]">최근 소비</h2>
+          <button data-screen="view-analytics" class="text-[11px] font-bold text-[#77736C] hover:text-[#161616]">전체 보기</button>
+        </div>
+
+        <div class="space-y-1">
+          <!-- Item 1 -->
+          <div data-screen="view-receipt-detail" class="flex justify-between items-center py-2 px-2 rounded-xl bg-white/70 border border-[#EAE5DB]/70 cursor-pointer hover:bg-white transition">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full bg-white border border-[#EAE5DB] flex items-center justify-center font-bold text-[10px] text-[#08233D]">카페</div>
+              <div>
+                <div class="text-xs font-bold text-[#161616]">스타벅스 강남점</div>
+                <div class="text-[10px] text-[#77736C]">9.03 14:32</div>
+              </div>
+            </div>
+            <div class="text-xs font-black text-[#161616]">₩11,500</div>
+          </div>
+
+          <!-- Item 2 -->
+          <div data-screen="view-receipt-detail" class="flex justify-between items-center py-2 px-2 rounded-xl bg-white/70 border border-[#EAE5DB]/70 cursor-pointer hover:bg-white transition">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full bg-white border border-[#EAE5DB] flex items-center justify-center font-bold text-[10px] text-[#08233D]">마트</div>
+              <div>
+                <div class="text-xs font-bold text-[#161616]">배달의민족 B마트</div>
+                <div class="text-[10px] text-[#77736C]">9.03 12:21</div>
+              </div>
+            </div>
+            <div class="text-xs font-black text-[#161616]">₩23,800</div>
+          </div>
+
+          <!-- Item 3 -->
+          <div data-screen="view-ingredients" class="flex justify-between items-center py-2 px-2 rounded-xl bg-white/70 border border-[#EAE5DB]/70 cursor-pointer hover:bg-white transition">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full bg-white border border-[#EAE5DB] flex items-center justify-center font-bold text-[10px] text-[#08233D]">쇼핑</div>
+              <div>
+                <div class="text-xs font-bold text-[#161616]">올리브영 강남점</div>
+                <div class="text-[10px] text-[#77736C]">9.02 18:44</div>
+              </div>
+            </div>
+            <div class="text-xs font-black text-[#161616]">₩32,000</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= 2. RECEIPT SCAN VIEW ================= -->
+    <section id="view-scan" class="screen-view bg-slate-950 text-white justify-between p-4">
+      <div class="flex justify-between items-center pt-1">
+        <button data-screen="view-home" class="p-1.5 text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <div class="text-sm font-black tracking-tight">영수증 스캔</div>
+        <button class="p-1.5 text-amber-400">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </button>
+      </div>
+
+      <div class="text-center text-[11px] text-slate-300">영수증을 프레임에 맞춰주세요</div>
+
+      <!-- Viewfinder Frame -->
+      <div class="relative w-full aspect-[3/4] max-h-[380px] bg-slate-900 rounded-2xl border border-slate-700 flex items-center justify-center overflow-hidden my-auto shadow-2xl">
+        <div class="scan-laser"></div>
+
+        <div class="w-3/4 bg-white text-slate-900 p-4 rounded shadow-lg text-center transform scale-95 border border-slate-300">
+          <div class="font-black text-sm text-[#08233D] mb-1">STARBUCKS</div>
+          <div class="text-[10px] font-bold text-slate-600 mb-1">강남점</div>
+          <div class="text-[9px] text-slate-400 border-b pb-1.5 border-dashed border-slate-300 mb-2">
+            서울 강남구 테헤란로 123<br/>2026-09-03 14:32:15
+          </div>
+          <div class="space-y-1 text-[10px] text-left font-medium border-b pb-2 border-dashed border-slate-300">
+            <div class="flex justify-between"><span>아이스 아메리카노</span><span class="font-bold">5,000</span></div>
+            <div class="flex justify-between"><span>샌드위치</span><span class="font-bold">6,500</span></div>
+          </div>
+          <div class="flex justify-between text-xs font-black mt-2">
+            <span>합계</span>
+            <span>11,500</span>
+          </div>
+        </div>
+
+        <div class="absolute top-3 left-3 w-5 h-5 border-t-2 border-l-2 border-amber-400"></div>
+        <div class="absolute top-3 right-3 w-5 h-5 border-t-2 border-r-2 border-amber-400"></div>
+        <div class="absolute bottom-3 left-3 w-5 h-5 border-b-2 border-l-2 border-amber-400"></div>
+        <div class="absolute bottom-3 right-3 w-5 h-5 border-b-2 border-r-2 border-amber-400"></div>
+      </div>
+
+      <!-- Shutter Button -->
+      <div class="flex justify-around items-center pt-2 pb-1">
+        <button class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </button>
+
+        <button data-screen="view-result" class="w-14 h-14 rounded-full border-4 border-white bg-amber-500 flex items-center justify-center shadow-lg active:scale-95 transition">
+          <div class="w-10 h-10 rounded-full border-2 border-white"></div>
+        </button>
+
+        <div class="w-9 h-9"></div>
+      </div>
+    </section>
+
+
+    <!-- ================= 3. OCR ANALYSIS RESULT ================= -->
+    <section id="view-result" class="screen-view p-4 justify-between">
+      <div>
+        <header class="flex items-center justify-between mb-3">
+          <button data-screen="view-scan" class="p-1">
+            <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="text-sm font-black text-[#08233D]">분석 결과</div>
+          <div class="w-5"></div>
+        </header>
+
+        <div class="bg-white rounded-2xl border border-[#EAE5DB] p-4 shadow-sm mb-3">
+          <div class="text-base font-black text-[#161616]">스타벅스 강남점</div>
+          <div class="text-[11px] font-bold text-[#77736C] mb-3">2026.09.03 14:32</div>
+
+          <div class="text-2xl font-black text-[#08233D] mb-3">₩11,500</div>
+
+          <div class="flex gap-1.5 mb-3">
+            <span class="px-2 py-0.5 bg-[#F8EDDA] text-[#9B701C] text-[11px] font-bold rounded">카페</span>
+            <span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-bold rounded">서울 강남구 테헤란로 123</span>
+          </div>
+
+          <div class="border-t border-[#EAE5DB] pt-3">
+            <div class="text-xs font-black text-[#161616] mb-2">구매 내역</div>
+            <div class="space-y-1.5 text-xs">
+              <div class="flex justify-between text-slate-800">
+                <span class="font-bold">아이스 아메리카노</span>
+                <span class="font-black">5,000원</span>
+              </div>
+              <div data-screen="view-ingredients" class="flex justify-between text-slate-800 cursor-pointer bg-amber-50 p-2 rounded-lg border border-amber-200">
+                <div>
+                  <span class="font-bold">B.E.L.T 샌드위치</span>
+                  <div class="text-[10px] text-amber-700 font-bold">성분분석 가능 →</div>
+                </div>
+                <span class="font-black">6,500원</span>
+              </div>
+            </div>
+            <div class="border-t border-slate-200 mt-2.5 pt-2.5 flex justify-between text-xs font-black text-[#08233D]">
+              <span>합계</span>
+              <span>11,500원</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 flex justify-between items-center text-xs">
+          <span class="font-bold text-amber-900 text-[11.5px]">AI가 자동으로 분석했어요.</span>
+          <button class="font-black text-[#08233D] underline text-[11px]">수정하기</button>
+        </div>
+      </div>
+
+      <button data-screen="view-home" class="w-full py-3 bg-[#08233D] text-white text-xs font-black rounded-xl shadow hover:bg-[#05182B] transition mt-3">
+        저장하기
+      </button>
+    </section>
+
+
+    <!-- ================= 4. CONSUMPTION ANALYTICS ================= -->
+    <section id="view-analytics" class="screen-view p-4">
+      <header class="flex items-center justify-between mb-2.5">
+        <button data-screen="view-home" class="p-1">
+          <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="text-sm font-black text-[#08233D]">소비 분석</div>
+        <div class="w-5"></div>
+      </header>
+
+      <!-- Range Selector -->
+      <div class="flex justify-around bg-[#EAE5DB]/60 p-1 rounded-xl mb-3 text-xs font-bold">
+        <button class="px-3 py-1 rounded-lg text-slate-600">주간</button>
+        <button class="px-3 py-1 rounded-lg bg-white text-[#08233D] shadow-sm font-black">월간</button>
+        <button class="px-3 py-1 rounded-lg text-slate-600">3개월</button>
+        <button class="px-3 py-1 rounded-lg text-slate-600">연간</button>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 border border-[#EAE5DB] shadow-sm mb-3">
+        <div class="text-xs font-bold text-[#77736C] mb-2">카테고리별 소비</div>
+
+        <div class="relative w-32 h-32 mx-auto my-1">
+          <svg class="w-full h-full" viewBox="0 0 36 36">
+            <path class="text-slate-100" stroke-width="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path class="text-[#08233D]" stroke-dasharray="45, 100" stroke-width="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" />
+            <path class="text-[#D4A23B]" stroke-dasharray="20, 100" stroke-dashoffset="-45" stroke-width="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" />
+            <path class="text-[#9B701C]" stroke-dasharray="15, 100" stroke-dashoffset="-65" stroke-width="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" />
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <span class="text-[10px] font-bold text-[#77736C]">식비</span>
+            <span class="text-lg font-black text-[#08233D]">45%</span>
+          </div>
+        </div>
+
+        <div class="mt-3 space-y-2 text-xs">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#08233D]"></span>
+              <span class="font-bold text-[#161616]">식비 45%</span>
+            </div>
+            <span class="font-black text-[#161616]">₩172,000</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#D4A23B]"></span>
+              <span class="font-bold text-[#161616]">쇼핑 20%</span>
+            </div>
+            <span class="font-black text-[#161616]">₩76,400</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#9B701C]"></span>
+              <span class="font-bold text-[#161616]">카페 15%</span>
+            </div>
+            <span class="font-black text-[#161616]">₩57,300</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Report Card -->
+      <div data-screen="view-whatif" class="bg-[#F8EDDA] p-3.5 rounded-2xl border border-[#D4A23B]/30 cursor-pointer">
+        <div class="text-[11px] font-black text-[#9B701C] mb-0.5">AI 분석 리포트</div>
+        <div class="text-xs font-black text-[#161616]">이번 달 식비 지출이 지난달보다 <strong class="text-[#D17D19]">18% 증가했어요.</strong></div>
+        <p class="text-[10.5px] text-[#77736C] mt-0.5">특히 배달 주문 증가가 주요 원인이에요.</p>
+        <div class="mt-2 text-[11px] font-bold text-[#08233D] underline flex items-center gap-1">
+          <span>What-if 절약 시뮬레이션 →</span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= 5. SPENDING MAP ================= -->
+    <section id="view-map" class="screen-view p-4 justify-between">
+      <div>
+        <header class="flex items-center justify-between mb-2">
+          <button data-screen="view-home" class="p-1">
+            <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="text-sm font-black text-[#08233D]">소비 지도</div>
+          <div class="w-5"></div>
+        </header>
+
+        <!-- Vector Map Container -->
+        <div class="relative w-full h-64 bg-[#EAE8E3] rounded-2xl overflow-hidden border border-[#EAE5DB] mb-3">
+          <svg class="w-full h-full" viewBox="0 0 300 260">
+            <path d="M 0,50 Q 150,80 300,40" stroke="#FFFFFF" stroke-width="12" fill="none"/>
+            <path d="M 80,0 Q 100,150 120,300" stroke="#FFFFFF" stroke-width="14" fill="none"/>
+            <path d="M 0,180 L 300,190" stroke="#FFFFFF" stroke-width="10" fill="none"/>
+            <path d="M 210,0 L 200,300" stroke="#FFFFFF" stroke-width="8" fill="none"/>
+
+            <g transform="translate(110, 110)" class="cursor-pointer">
+              <circle cx="0" cy="0" r="14" fill="#08233D" opacity="0.2"/>
+              <path d="M0 -20 C-7 -20 -12 -15 -12 -7 C-12 4 0 16 0 16 C0 16 12 4 12 -7 C12 -15 7 -20 0 -20 Z" fill="#08233D"/>
+              <circle cx="0" cy="-9" r="4.5" fill="#D4A23B"/>
+            </g>
+            <g transform="translate(200, 60)" class="cursor-pointer">
+              <path d="M0 -16 C-5 -16 -9 -11 -9 -5 C-9 3 0 13 0 13 C0 13 9 3 9 -5 C9 -11 5 -16 0 -16 Z" fill="#D17D19"/>
+              <circle cx="0" cy="-7" r="3.5" fill="#FFFFFF"/>
+            </g>
+            <g transform="translate(60, 180)" class="cursor-pointer">
+              <path d="M0 -16 C-5 -16 -9 -11 -9 -5 C-9 3 0 13 0 13 C0 13 9 3 9 -5 C9 -11 5 -16 0 -16 Z" fill="#08233D"/>
+              <circle cx="0" cy="-7" r="3.5" fill="#FFFFFF"/>
+            </g>
+          </svg>
+          <div class="absolute top-2.5 left-2.5 bg-white/90 px-2.5 py-1 rounded-lg text-[10px] font-bold text-[#08233D] shadow border border-slate-200">
+            강남역 주변 소비 장소 8곳
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-[#EAE5DB] p-4 shadow-sm">
+          <div class="text-sm font-black text-[#161616] mb-2">스타벅스 강남점</div>
+          <div class="grid grid-cols-3 gap-2 text-center border-y border-slate-100 py-2.5 mb-3 text-xs">
+            <div>
+              <div class="text-[#77736C] text-[11px]">방문</div>
+              <div class="font-black text-[#08233D]">12회</div>
+            </div>
+            <div>
+              <div class="text-[#77736C] text-[11px]">구매</div>
+              <div class="font-black text-[#08233D]">15회</div>
+            </div>
+            <div>
+              <div class="text-[#77736C] text-[11px]">총 지출</div>
+              <div class="font-black text-[#D17D19]">₩72,600</div>
+            </div>
+          </div>
+          <div class="flex justify-between items-center text-xs text-[#77736C]">
+            <span>최근 구매</span>
+            <span class="font-bold text-[#161616]">2026.09.02</span>
+          </div>
+        </div>
+      </div>
+
+      <button data-screen="view-receipt-detail" class="w-full py-3 bg-[#08233D] text-white text-xs font-black rounded-xl shadow-sm mt-3">
+        상세 보기
+      </button>
+    </section>
+
+
+    <!-- ================= 6. AI COACH CHAT ================= -->
+    <section id="view-ai" class="screen-view bg-[#08233D] text-white p-4 justify-between">
+      <div>
+        <header class="flex items-center justify-between pb-2.5 border-b border-white/10 mb-3">
+          <button data-screen="view-home" class="p-1 text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="text-xs font-black tracking-tight text-amber-300">AI 소비 코치</div>
+          <div class="w-5"></div>
+        </header>
+
+        <div class="space-y-3 text-xs">
+          <div class="flex justify-end">
+            <div class="bg-white/10 border border-white/20 text-white px-3.5 py-2 rounded-2xl rounded-tr-none max-w-[80%] font-medium text-[11.5px]">
+              이번 달 지금까지 얼마나 썼어?
+            </div>
+          </div>
+
+          <div class="flex items-start gap-2">
+            <div class="w-6 h-6 rounded-full bg-amber-400 text-[#08233D] font-black flex items-center justify-center shrink-0 text-[9px]">AI</div>
+            <div class="bg-white text-slate-900 px-3.5 py-2.5 rounded-2xl rounded-tl-none max-w-[85%] shadow text-[11.5px]">
+              이번 달 총 지출은 <strong class="text-[#08233D]">₩382,400</strong>이에요.
+            </div>
+          </div>
+
+          <div class="flex justify-end">
+            <div class="bg-white/10 border border-white/20 text-white px-3.5 py-2 rounded-2xl rounded-tr-none max-w-[80%] font-medium text-[11.5px]">
+              어디에 가장 많이 쓰고 있어?
+            </div>
+          </div>
+
+          <div class="flex items-start gap-2">
+            <div class="w-6 h-6 rounded-full bg-amber-400 text-[#08233D] font-black flex items-center justify-center shrink-0 text-[9px]">AI</div>
+            <div class="bg-white text-slate-900 px-3.5 py-2.5 rounded-2xl rounded-tl-none max-w-[85%] shadow space-y-1.5 text-[11.5px]">
+              <div>
+                <strong class="text-[#D17D19]">식비 지출</strong>이 가장 많아요.<br/>
+                전체의 <strong>45%</strong>를 차지해요.
+              </div>
+              <div class="bg-slate-50 p-2 rounded-lg border border-slate-200 text-[10.5px] space-y-0.5">
+                <div class="flex justify-between"><span>식비</span><span class="font-bold">45% (₩172,000)</span></div>
+                <div class="flex justify-between"><span>쇼핑</span><span class="font-bold">20% (₩76,400)</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <div class="flex items-center gap-2 bg-white/10 border border-white/20 rounded-2xl p-1.5">
+          <input type="text" placeholder="무엇이든 물어보세요" class="bg-transparent flex-1 px-2.5 text-xs text-white placeholder-slate-400 focus:outline-none" />
+          <button class="w-7 h-7 rounded-full bg-amber-400 text-[#08233D] flex items-center justify-center font-bold">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= 7. WHAT-IF SIMULATION ================= -->
+    <section id="view-whatif" class="screen-view p-4 justify-between">
+      <div>
+        <header class="flex items-center justify-between mb-3">
+          <button data-screen="view-analytics" class="p-1">
+            <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="text-sm font-black text-[#08233D]">What-if 시뮬레이션</div>
+          <div class="w-5"></div>
+        </header>
+
+        <div class="bg-[#08233D] text-white p-4 rounded-2xl mb-3 shadow-sm">
+          <div class="text-[10.5px] text-amber-300 font-bold mb-0.5">질문 선택</div>
+          <div class="text-sm font-black">배달을 주 3회에서 1회로 줄이면?</div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-[#EAE5DB] p-4 shadow-sm space-y-3">
+          <div class="flex items-center gap-1.5 text-xs font-black text-[#D17D19]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>AI 시뮬레이션 결과</span>
+          </div>
+
+          <div>
+            <div class="text-lg font-black text-[#08233D]">월 약 <strong class="text-[#D17D19]">₩70,000</strong></div>
+            <div class="text-xs font-black text-[#161616]">절약 가능해요!</div>
+          </div>
+
+          <div class="pt-2 space-y-2.5">
+            <div>
+              <div class="flex justify-between text-[11px] font-bold mb-1 text-slate-600">
+                <span>현재 소비</span>
+                <span>₩470,000</span>
+              </div>
+              <div class="w-full h-3 bg-slate-100 rounded-lg overflow-hidden">
+                <div class="h-full bg-[#08233D] rounded-lg" style="width: 100%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-[11px] font-bold mb-1 text-slate-600">
+                <span>조정 후 예상 소비</span>
+                <span class="text-[#D17D19]">₩400,000</span>
+              </div>
+              <div class="w-full h-3 bg-slate-100 rounded-lg overflow-hidden">
+                <div class="h-full bg-[#D4A23B] rounded-lg" style="width: 85%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="w-full py-3 bg-white border border-[#EAE5DB] text-[#08233D] text-xs font-black rounded-xl shadow-sm hover:bg-slate-50 mt-3">
+        다른 시뮬레이션 해보기
+      </button>
+    </section>
+
+
+    <!-- ================= 8. INGREDIENTS ANALYSIS ================= -->
+    <section id="view-ingredients" class="screen-view p-4 justify-between">
+      <div>
+        <header class="flex items-center justify-between mb-3">
+          <button data-screen="view-result" class="p-1">
+            <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="text-sm font-black text-[#08233D]">성분 분석</div>
+          <div class="w-5"></div>
+        </header>
+
+        <div class="bg-white rounded-2xl border border-[#EAE5DB] p-3.5 shadow-sm flex items-center gap-3.5 mb-3">
+          <div class="w-16 h-16 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center border border-slate-200">
+            <svg class="w-9 h-9 text-amber-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M4 11h16M5 7h14a1 1 0 011 1v2H4V8a1 1 0 011-1zM4 13h16v3a2 2 0 01-2 2H6a2 2 0 01-2-2v-3z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="text-sm font-black text-[#161616]">B.E.L.T 샌드위치</div>
+            <div class="text-[11px] font-bold text-[#77736C]">스타벅스</div>
+          </div>
+        </div>
+
+        <div class="flex border-b border-[#EAE5DB] mb-3 text-xs font-bold">
+          <button class="flex-1 py-2 border-b-2 border-[#08233D] text-[#08233D] font-black">원재료</button>
+          <button class="flex-1 py-2 text-[#77736C]">영양 정보</button>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-[#EAE5DB] p-4 text-xs leading-relaxed text-slate-800 mb-3">
+          밀가루, 계란, 베이컨, 토마토, 양상추, 마요네즈, 
+          <strong class="text-[#E54D42] underline font-black">새우 추출물</strong>, 
+          치즈, 설탕, 정제소금, 후추
+        </div>
+      </div>
+
+      <div data-screen="view-allergy-alert" class="bg-red-50 border border-red-200 rounded-2xl p-3.5 cursor-pointer mt-3">
+        <div class="flex items-center gap-1.5 text-xs font-black text-[#E54D42] mb-0.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <span>알레르기 주의</span>
+        </div>
+        <div class="text-xs font-black text-slate-900">
+          등록된 <strong class="text-[#E54D42]">새우(갑각류)</strong>가 포함되어 있어요!
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= 9. ALLERGY ALERT ================= -->
+    <section id="view-allergy-alert" class="screen-view bg-[#FFF8F0] p-5 justify-between text-center">
+      <div class="pt-6 space-y-3">
+        <div class="w-16 h-16 mx-auto rounded-full bg-red-100 border-2 border-red-300 flex items-center justify-center text-red-500 shadow-sm">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+
+        <h1 class="text-lg font-black text-slate-900 leading-snug">
+          <strong class="text-[#E54D42]">새우(갑각류)</strong>가<br/>포함되어 있어요!
+        </h1>
+
+        <p class="text-xs text-slate-600 leading-relaxed max-w-xs mx-auto">
+          등록된 알레르기와 성분을 비교한 결과<br/>주의가 필요한 성분이 확인되었어요.
+        </p>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-3.5 text-left shadow-sm mt-3">
+          <div class="text-[10px] font-bold text-slate-500 mb-1">등록된 알레르기</div>
+          <div class="flex justify-between items-center text-xs">
+            <span class="font-black text-slate-800">새우 (갑각류)</span>
+            <button data-screen="view-allergy-mgmt" class="text-[11px] font-bold text-[#08233D] underline">관리하기</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pb-2">
+        <div class="text-[11px] text-slate-500 font-medium mb-2.5">구매 전 성분을 꼭 확인하세요.</div>
+        <button data-screen="view-ingredients" class="w-full py-3 bg-[#08233D] text-white text-xs font-black rounded-xl shadow">
+          확인했어요
+        </button>
+      </div>
+    </section>
+
+
+    <!-- ================= 10. PROFILE VIEW ================= -->
+    <section id="view-profile" class="screen-view p-4">
+      <header class="flex items-center justify-between mb-3">
+        <div class="text-base font-black text-[#08233D]">내 정보</div>
+        <div class="w-5"></div>
+      </header>
+
+      <div class="bg-[#08233D] text-white rounded-2xl p-4 shadow-sm flex items-center gap-3 mb-4">
+        <div class="w-11 h-11 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs font-black text-amber-300">
+          YJ
+        </div>
+        <div>
+          <div class="text-sm font-black">유진</div>
+          <div class="text-[11px] text-slate-300">yujin@email.com</div>
+        </div>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <div class="text-[11px] font-bold text-[#77736C] mb-1.5">계정 정보</div>
+          <div class="bg-white rounded-2xl border border-[#EAE5DB] divide-y divide-slate-100 shadow-sm">
+            <div class="p-3.5 flex justify-between items-center">
+              <span class="font-bold text-slate-700">로그인 계정</span>
+              <span class="text-slate-400">yujin@email.com</span>
+            </div>
+            <div class="p-3.5 flex justify-between items-center cursor-pointer">
+              <span class="font-bold text-slate-700">계정 관리</span>
+              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="text-[11px] font-bold text-[#77736C] mb-1.5">알레르기 정보</div>
+          <div data-screen="view-allergy-mgmt" class="bg-white rounded-2xl border border-[#EAE5DB] p-3.5 flex justify-between items-center cursor-pointer shadow-sm">
+            <div>
+              <div class="text-xs font-black text-[#161616]">새우 (갑각류)</div>
+              <div class="text-[10px] text-[#77736C]">등록일 2026.08.20</div>
+            </div>
+            <span class="text-[11px] font-bold text-[#08233D] underline">관리하기</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= 11. ALLERGY MANAGEMENT ================= -->
+    <section id="view-allergy-mgmt" class="screen-view p-4">
+      <header class="flex items-center justify-between mb-3">
+        <button data-screen="view-profile" class="p-1">
+          <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="text-sm font-black text-[#08233D]">알레르기 관리</div>
+        <div class="w-5"></div>
+      </header>
+
+      <div class="flex justify-between items-center mb-2.5">
+        <h2 class="text-xs font-bold text-[#77736C]">나의 알레르기</h2>
+        <button class="w-6 h-6 rounded-full bg-[#08233D] text-white flex items-center justify-center font-bold text-xs">
+          +
+        </button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-[#EAE5DB] p-3.5 flex justify-between items-center mb-4 shadow-sm">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full bg-red-50 border border-red-200 text-red-500 flex items-center justify-center font-black text-xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          </div>
+          <div>
+            <div class="text-xs font-black text-slate-900">새우 (갑각류)</div>
+            <div class="text-[10px] text-slate-400">등록일 2026.08.20</div>
+          </div>
+        </div>
+        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+      </div>
+
+      <div class="bg-[#FFFAF2] border border-[#EAE5DB] rounded-2xl p-4 text-center space-y-2">
+        <p class="text-xs text-slate-600 leading-relaxed font-medium">
+          AI가 성분 분석 시 알레르기 정보를 기반으로 주의 성분을 알려드려요.
+        </p>
+      </div>
+    </section>
+
+
+    <!-- ================= 12. RECEIPT DETAIL ================= -->
+    <section id="view-receipt-detail" class="screen-view p-4 justify-between">
+      <div>
+        <header class="flex items-center justify-between mb-3">
+          <button data-screen="view-home" class="p-1">
+            <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="text-sm font-black text-[#08233D]">영수증 상세</div>
+          <div class="w-5"></div>
+        </header>
+
+        <div class="bg-white rounded-2xl border border-[#EAE5DB] p-4 shadow-sm space-y-3">
+          <div>
+            <div class="text-base font-black text-[#161616]">스타벅스 강남점</div>
+            <div class="text-[11px] text-[#77736C] font-bold">2026.09.03 14:32</div>
+          </div>
+
+          <div class="text-xl font-black text-[#08233D] border-b border-slate-100 pb-2.5">
+            ₩11,500
+          </div>
+
+          <div class="space-y-2 text-xs">
+            <div class="font-black text-[#161616]">구매 내역</div>
+            <div class="flex justify-between text-slate-700 font-medium">
+              <span>아이스 아메리카노</span>
+              <span class="font-bold">5,000원</span>
+            </div>
+            <div class="flex justify-between text-slate-700 font-medium">
+              <span>샌드위치</span>
+              <span class="font-bold">6,500원</span>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-100 pt-2.5 space-y-1.5 text-[11px]">
+            <div class="flex justify-between">
+              <span class="text-[#77736C]">결제 수단</span>
+              <span class="font-bold text-slate-800">신용카드</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[#77736C]">카테고리</span>
+              <span class="font-bold text-slate-800">카페</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[#77736C]">위치</span>
+              <span class="font-bold text-slate-800">서울 강남구 테헤란로 123</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button data-screen="view-scan" class="w-full py-3 bg-[#08233D] text-white text-xs font-black rounded-xl shadow mt-3">
+        영수증 이미지 보기
+      </button>
+    </section>
+
+
+    <!-- ================= FIXED BOTTOM TAB NAVIGATION ================= -->
+    <nav class="bottom-tab-bar">
+      <!-- 1. Home Tab -->
+      <button id="tab-home" data-screen="view-home" class="tab-btn active">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        <span>홈</span>
+      </button>
+
+      <!-- 2. History/Receipt Tab -->
+      <button id="tab-history" data-screen="view-analytics" class="tab-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <span>내역</span>
+      </button>
+
+      <!-- 3. Map Tab -->
+      <button id="tab-map" data-screen="view-map" class="tab-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span>지도</span>
+      </button>
+
+      <!-- 4. AI Tab -->
+      <button id="tab-ai" data-screen="view-ai" class="tab-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        <span>AI</span>
+      </button>
+
+      <!-- 5. Profile Tab -->
+      <button id="tab-profile" data-screen="view-profile" class="tab-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+        <span>내 정보</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script defer src="js/Screen.js"></script>
+  <script defer src="js/NavigationView.js"></script>
+  <script defer src="js/ScreenRouter.js"></script>
+  <script defer src="js/SpotApp.js"></script>
+  <script defer src="js/main.js"></script>
+
+</body>
+</html>

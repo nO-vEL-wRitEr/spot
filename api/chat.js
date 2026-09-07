@@ -17,9 +17,12 @@ function buildSystemPrompt(summary) {
   return `당신은 SPOT 소비관리 앱의 AI 소비 코치입니다.
 사용자가 입력한 실제 지출 집계 데이터를 바탕으로만 답하세요.
 데이터에 없는 결제내역이나 금액은 추측하지 마세요.
-답변은 한국어로, 모바일 채팅에 맞게 짧고 명확하게 작성하세요.
+답변은 한국어로, 모바일 채팅에 맞게 간결하고 읽기 쉽게 작성하세요.
 가능하면 실제 금액, 비율, 카테고리를 근거로 답하세요.
 재정적 결정을 강요하지 말고 소비 습관을 이해하도록 도와주세요.
+답변은 반드시 완결된 문장으로 끝내고, 문장 중간에서 끊지 마세요.
+짧은 질문에는 2~4문장, 분석 요청에는 최대 6~8문장 정도로 답하세요.
+마크다운 표는 사용하지 마세요.
 
 현재 지출 집계:
 ${JSON.stringify(summary, null, 2)}`;
@@ -31,7 +34,7 @@ async function callGemini(apiKey, model, summary, messages) {
   const recent = Array.isArray(messages) ? messages.slice(-10) : [];
   const contents = [
     { role: 'user', parts: [{ text: buildSystemPrompt(summary) }] },
-    { role: 'model', parts: [{ text: '알겠습니다. 제공된 SPOT 지출 데이터만 근거로 답하겠습니다.' }] },
+    { role: 'model', parts: [{ text: '알겠습니다. 제공된 SPOT 지출 데이터만 근거로, 완결된 문장으로 답하겠습니다.' }] },
     ...recent.map(m => ({
       role: m.role === 'assistant' || m.role === 'model' ? 'model' : 'user',
       parts: [{ text: String(m.text || '').slice(0, 2000) }]
@@ -45,7 +48,7 @@ async function callGemini(apiKey, model, summary, messages) {
       contents,
       generationConfig: {
         temperature: 0.45,
-        maxOutputTokens: 700
+        maxOutputTokens: 1400
       }
     })
   });
@@ -59,7 +62,7 @@ async function callGemini(apiKey, model, summary, messages) {
 
   const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim() || '';
   if (!text) throw new Error('Gemini 응답이 비어 있습니다.');
-  return text.slice(0, 4000);
+  return text.slice(0, 7000);
 }
 
 module.exports = async function handler(req, res) {

@@ -5,43 +5,47 @@
   window.spotApp = app;
   app.start();
 
-  const expenseScript = document.createElement('script');
-  expenseScript.src = 'js/ExpenseManager.js';
-  expenseScript.onload = () => {
-    const expenseManager = new ExpenseManager(document, app);
-    window.spotExpenseManager = expenseManager;
-    expenseManager.start();
-
-    const analyticsScript = document.createElement('script');
-    analyticsScript.src = 'js/AnalyticsManager.js';
-    analyticsScript.onload = () => {
-      const analyticsManager = new AnalyticsManager(document, expenseManager);
-      window.spotAnalyticsManager = analyticsManager;
-      analyticsManager.start();
-    };
-    analyticsScript.onerror = () => console.error('AnalyticsManager.js를 불러오지 못했습니다.');
-    document.body.appendChild(analyticsScript);
-
-    const aiScript = document.createElement('script');
-    aiScript.src = 'js/AIInsight.js';
-    aiScript.onload = () => {
-      const aiInsight = new AIInsight(document, expenseManager);
-      window.spotAIInsight = aiInsight;
-      aiInsight.start();
-
-      const chatScript = document.createElement('script');
-      chatScript.src = 'js/AIChat.js';
-      chatScript.onload = () => {
-        const aiChat = new AIChat(document, expenseManager, aiInsight);
-        window.spotAIChat = aiChat;
-        aiChat.start();
-      };
-      chatScript.onerror = () => console.error('AIChat.js를 불러오지 못했습니다.');
-      document.body.appendChild(chatScript);
-    };
-    aiScript.onerror = () => console.error('AIInsight.js를 불러오지 못했습니다.');
-    document.body.appendChild(aiScript);
+  const loadScript = (src, onload, onerrorMessage) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = onload;
+    script.onerror = () => console.error(onerrorMessage);
+    document.body.appendChild(script);
   };
-  expenseScript.onerror = () => console.error('ExpenseManager.js를 불러오지 못했습니다.');
-  document.body.appendChild(expenseScript);
+
+  loadScript('js/SpotDB.js', () => {
+    const spotDB = new SpotDB();
+    window.spotDB = spotDB;
+
+    loadScript('js/ExpenseManager.js', async () => {
+      const expenseManager = new ExpenseManager(document, app);
+      window.spotExpenseManager = expenseManager;
+      expenseManager.start();
+
+      try {
+        await spotDB.hydrateManager(expenseManager);
+        console.info('SPOT IndexedDB 연결 완료');
+      } catch (error) {
+        console.error('SPOT IndexedDB 초기화 실패. 기존 로컬 저장소를 사용합니다.', error);
+      }
+
+      loadScript('js/AnalyticsManager.js', () => {
+        const analyticsManager = new AnalyticsManager(document, expenseManager);
+        window.spotAnalyticsManager = analyticsManager;
+        analyticsManager.start();
+      }, 'AnalyticsManager.js를 불러오지 못했습니다.');
+
+      loadScript('js/AIInsight.js', () => {
+        const aiInsight = new AIInsight(document, expenseManager);
+        window.spotAIInsight = aiInsight;
+        aiInsight.start();
+
+        loadScript('js/AIChat.js', () => {
+          const aiChat = new AIChat(document, expenseManager, aiInsight);
+          window.spotAIChat = aiChat;
+          aiChat.start();
+        }, 'AIChat.js를 불러오지 못했습니다.');
+      }, 'AIInsight.js를 불러오지 못했습니다.');
+    }, 'ExpenseManager.js를 불러오지 못했습니다.');
+  }, 'SpotDB.js를 불러오지 못했습니다.');
 })();

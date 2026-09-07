@@ -5,13 +5,23 @@
   window.spotApp = app;
   app.start();
 
-  const script = document.createElement('script');
-  script.src = 'js/ExpenseManager.js';
-  script.onload = () => {
+  const expenseScript = document.createElement('script');
+  expenseScript.src = 'js/ExpenseManager.js';
+  expenseScript.onload = () => {
     const expenseManager = new ExpenseManager(document, app);
     window.spotExpenseManager = expenseManager;
     expenseManager.start();
+
+    const aiScript = document.createElement('script');
+    aiScript.src = 'js/AIInsight.js';
+    aiScript.onload = () => {
+      const aiInsight = new AIInsight(document, expenseManager);
+      window.spotAIInsight = aiInsight;
+      aiInsight.start();
+    };
+    aiScript.onerror = () => console.error('AIInsight.js를 불러오지 못했습니다.');
+    document.body.appendChild(aiScript);
   };
-  script.onerror = () => console.error('ExpenseManager.js를 불러오지 못했습니다.');
-  document.body.appendChild(script);
+  expenseScript.onerror = () => console.error('ExpenseManager.js를 불러오지 못했습니다.');
+  document.body.appendChild(expenseScript);
 })();

@@ -3,7 +3,9 @@ class ExpenseManager {
     this.root = root;
     this.app = app;
     this.storageKey = 'spot-expenses-v1';
+    this.budgetKey = 'spot-monthly-budget-v1';
     this.expenses = this.load();
+    this.monthlyBudget = this.loadBudget();
     this.editingId = null;
     this.pendingOcr = null;
   }
@@ -22,8 +24,19 @@ class ExpenseManager {
     catch (_) { return []; }
   }
 
+  loadBudget() {
+    const value = Number(localStorage.getItem(this.budgetKey));
+    return Number.isFinite(value) && value > 0 ? value : 600000;
+  }
+
   save() {
     localStorage.setItem(this.storageKey, JSON.stringify(this.expenses));
+    this.render();
+  }
+
+  saveBudget(value) {
+    this.monthlyBudget = Math.max(0, Number(value) || 0);
+    localStorage.setItem(this.budgetKey, String(this.monthlyBudget));
     this.render();
   }
 
@@ -54,6 +67,18 @@ class ExpenseManager {
       .spot-expense-row{display:flex;justify-content:space-between;align-items:center;padding:9px 8px;border-radius:12px;background:rgba(255,255,255,.82);border:1px solid rgba(234,229,219,.85);cursor:pointer}
       .spot-expense-actions{display:flex;gap:5px;margin-left:8px}
       .spot-icon-btn{font-size:10px;font-weight:800;padding:5px 7px;border-radius:8px;background:#F8FAFC;border:1px solid #E2E8F0;color:#475569}
+      .spot-spending-card{padding:22px 20px!important;min-height:178px;margin-bottom:18px!important;border-radius:22px!important;display:flex;flex-direction:column;justify-content:space-between}
+      .spot-spending-card .spot-total{font-size:34px;line-height:1;font-weight:950;letter-spacing:-1.5px;margin:9px 0 17px}
+      .spot-budget-button{font-size:10px;font-weight:900;color:#F5C451;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);padding:5px 8px;border-radius:8px}
+      .spot-weekly-card{background:#fff;border:1px solid #EAE5DB;border-radius:18px;padding:14px;margin-bottom:24px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
+      .spot-weekly-bars{display:grid;grid-template-columns:repeat(7,1fr);align-items:end;gap:7px;height:78px;margin-top:10px;padding:0 3px}
+      .spot-weekly-bar-wrap{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+      .spot-weekly-bar{width:100%;max-width:22px;min-height:4px;background:#08233D;border-radius:6px 6px 3px 3px;transition:height .25s ease}
+      .spot-weekly-bar.today{background:#D4A23B}
+      .spot-weekly-label{font-size:9px;font-weight:800;color:#77736C}
+      .spot-weekly-label.today{color:#D17D19;font-weight:950}
+      .spot-ai-card{margin-top:0!important;margin-bottom:18px!important;padding:16px!important}
+      .spot-stat-pill{font-size:9px;font-weight:900;color:#9B701C;background:#FFF7E6;border:1px solid #F3D79D;padding:4px 7px;border-radius:999px;white-space:nowrap}
     `;
     document.head.appendChild(style);
   }
@@ -62,6 +87,48 @@ class ExpenseManager {
     const home = this.root.getElementById('view-home');
     if (!home || home.dataset.expenseEnhanced) return;
     home.dataset.expenseEnhanced = 'true';
+
+    const articles = [...home.querySelectorAll('article')];
+    const spendingCard = articles.find(a => a.textContent.includes('이번 달 총 지출'));
+    const aiCard = articles.find(a => a.textContent.includes('AI 인사이트'));
+    const oldWeeklyCard = articles.find(a => a.textContent.includes('주간 구매량 추이'));
+
+    if (spendingCard) {
+      spendingCard.classList.add('spot-spending-card');
+      const total = [...spendingCard.querySelectorAll('div')].find(el => el.className.includes('text-2xl'));
+      if (total) {
+        total.classList.remove('text-2xl', 'mb-2.5');
+        total.classList.add('spot-total');
+        total.id = 'spot-monthly-total';
+      }
+
+      const budgetRow = [...spendingCard.querySelectorAll('div')].find(el => el.textContent.includes('예산') && el.className.includes('justify-between'));
+      if (budgetRow) {
+        budgetRow.innerHTML = `
+          <button type="button" id="spot-budget-open" class="flex items-center gap-1 hover:opacity-90">
+            <span>예산 <strong id="spot-budget-value">${this.formatMoney(this.monthlyBudget)}</strong></span>
+            <span class="spot-budget-button">설정</span>
+          </button>
+          <span id="spot-budget-percent" class="font-black text-[#D4A23B]">0%</span>`;
+        budgetRow.querySelector('#spot-budget-open').addEventListener('click', () => this.openBudgetModal());
+      }
+
+      const progress = spendingCard.querySelector('.h-full.bg-\\[\\#D4A23B\\]') || [...spendingCard.querySelectorAll('div')].find(el => String(el.getAttribute('style') || '').includes('width: 64%'));
+      if (progress) progress.id = 'spot-budget-progress';
+    }
+
+    if (oldWeeklyCard) {
+      oldWeeklyCard.className = 'spot-weekly-card';
+      oldWeeklyCard.id = 'spot-weekly-stats';
+      oldWeeklyCard.removeAttribute('data-screen');
+    }
+
+    if (aiCard) {
+      aiCard.classList.add('spot-ai-card');
+      if (oldWeeklyCard && aiCard.compareDocumentPosition(oldWeeklyCard) & Node.DOCUMENT_POSITION_FOLLOWING) {
+        oldWeeklyCard.insertAdjacentElement('afterend', aiCard);
+      }
+    }
 
     const recentTitle = [...home.querySelectorAll('h2')].find(el => el.textContent.includes('최근 소비'));
     if (recentTitle) {
@@ -240,6 +307,39 @@ class ExpenseManager {
     this.app?.router?.navigate('view-home');
   }
 
+  openBudgetModal() {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'spot-modal-backdrop';
+    backdrop.innerHTML = `
+      <form class="spot-modal" id="spot-budget-form">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="text-base font-black text-[#08233D]">월 예산 설정</h3>
+          <button type="button" data-close class="text-slate-400 text-xl">×</button>
+        </div>
+        <p class="text-[11px] text-slate-500 mb-4">이번 달 소비 한도를 정하면 지출률을 자동으로 계산해요.</p>
+        <label><span class="spot-label">월 예산</span><input name="budget" type="number" min="0" step="1000" class="spot-field" required value="${this.monthlyBudget}"></label>
+        <div class="grid grid-cols-3 gap-2 mt-3">
+          ${[300000,500000,1000000].map(v => `<button type="button" data-budget="${v}" class="spot-btn-secondary">${this.formatMoney(v)}</button>`).join('')}
+        </div>
+        <div class="grid grid-cols-2 gap-2 mt-4">
+          <button type="button" data-close class="spot-btn-secondary">취소</button>
+          <button class="spot-btn-primary">예산 저장</button>
+        </div>
+      </form>`;
+    document.body.appendChild(backdrop);
+    const close = () => backdrop.remove();
+    backdrop.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', close));
+    backdrop.querySelectorAll('[data-budget]').forEach(b => b.addEventListener('click', () => {
+      backdrop.querySelector('[name="budget"]').value = b.dataset.budget;
+    }));
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
+    backdrop.querySelector('form').addEventListener('submit', e => {
+      e.preventDefault();
+      this.saveBudget(new FormData(e.currentTarget).get('budget'));
+      close();
+    });
+  }
+
   openExpenseModal(id = null, initial = null) {
     const existing = id ? this.expenses.find(e => e.id === id) : null;
     const data = existing || initial || { merchant: '', amount: '', category: '식비', date: new Date().toISOString().slice(0,16), memo: '', source: 'manual' };
@@ -281,6 +381,7 @@ class ExpenseManager {
   render() {
     this.renderHomeList();
     this.renderMonthlyTotal();
+    this.renderWeeklyStats();
   }
 
   renderHomeList() {
@@ -317,8 +418,77 @@ class ExpenseManager {
     const now = new Date();
     const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
     const total = this.expenses.filter(e => String(e.date || '').startsWith(ym)).reduce((sum, e) => sum + Number(e.amount || 0), 0);
-    const totalEl = [...home.querySelectorAll('div')].find(el => el.className.includes('text-2xl') && el.className.includes('font-black'));
+    const totalEl = this.root.getElementById('spot-monthly-total') || [...home.querySelectorAll('div')].find(el => el.className.includes('text-2xl') && el.className.includes('font-black'));
     if (totalEl) totalEl.textContent = this.formatMoney(total);
+
+    const percent = this.monthlyBudget > 0 ? Math.round((total / this.monthlyBudget) * 100) : 0;
+    const budgetValue = this.root.getElementById('spot-budget-value');
+    const percentEl = this.root.getElementById('spot-budget-percent');
+    const progress = this.root.getElementById('spot-budget-progress');
+    if (budgetValue) budgetValue.textContent = this.formatMoney(this.monthlyBudget);
+    if (percentEl) percentEl.textContent = `${percent}%`;
+    if (progress) progress.style.width = `${Math.min(percent, 100)}%`;
+  }
+
+  renderWeeklyStats() {
+    const card = this.root.getElementById('spot-weekly-stats');
+    if (!card) return;
+
+    const now = new Date();
+    now.setHours(12,0,0,0);
+    const day = now.getDay();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - ((day + 6) % 7));
+    const nextMonday = new Date(monday);
+    nextMonday.setDate(monday.getDate() + 7);
+    const prevMonday = new Date(monday);
+    prevMonday.setDate(monday.getDate() - 7);
+
+    const current = this.expenses.filter(e => {
+      const d = new Date(e.date);
+      return !Number.isNaN(d.getTime()) && d >= monday && d < nextMonday;
+    });
+    const previous = this.expenses.filter(e => {
+      const d = new Date(e.date);
+      return !Number.isNaN(d.getTime()) && d >= prevMonday && d < monday;
+    });
+
+    const totals = Array(7).fill(0);
+    current.forEach(e => {
+      const d = new Date(e.date);
+      const index = Math.floor((d.setHours(12,0,0,0) - monday) / 86400000);
+      if (index >= 0 && index < 7) totals[index] += Number(e.amount || 0);
+    });
+
+    const total = totals.reduce((a,b) => a+b, 0);
+    const previousTotal = previous.reduce((sum,e) => sum + Number(e.amount || 0), 0);
+    const change = previousTotal > 0 ? Math.round(((total - previousTotal) / previousTotal) * 100) : null;
+    const max = Math.max(...totals, 1);
+    const labels = ['월','화','수','목','금','토','일'];
+    const todayIndex = Math.floor((now - monday) / 86400000);
+    const avg = current.length ? Math.round(total / current.length) : 0;
+    const compareText = change === null ? '비교 데이터 없음' : `${change >= 0 ? '+' : ''}${change}%`;
+
+    card.innerHTML = `
+      <div class="flex justify-between items-start gap-2">
+        <div>
+          <div class="flex items-center gap-1.5 text-[11px] font-black text-[#08233D]">
+            <span>↗</span><span>이번 주 소비 통계</span>
+          </div>
+          <div class="text-xl font-black text-[#161616] mt-1">${this.formatMoney(total)}</div>
+          <div class="text-[10px] text-[#77736C] mt-0.5">${current.length}건 · 건당 평균 ${this.formatMoney(avg)}</div>
+        </div>
+        <div class="text-right">
+          <span class="spot-stat-pill">지난주 대비 ${compareText}</span>
+        </div>
+      </div>
+      <div class="spot-weekly-bars">
+        ${totals.map((value, i) => {
+          const height = Math.max(5, Math.round((value / max) * 62));
+          const today = i === todayIndex;
+          return `<div class="spot-weekly-bar-wrap" title="${labels[i]} ${this.formatMoney(value)}"><div class="spot-weekly-bar ${today ? 'today' : ''}" style="height:${height}px"></div><span class="spot-weekly-label ${today ? 'today' : ''}">${today ? '오늘' : labels[i]}</span></div>`;
+        }).join('')}
+      </div>`;
   }
 
   openDetail(id) {

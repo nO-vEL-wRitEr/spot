@@ -1,7 +1,7 @@
 class SpotDB {
   constructor() {
     this.dbName = 'spot-db';
-    this.version = 1;
+    this.version = 2;
     this.db = null;
     this.migrationKey = 'spot-indexeddb-migrated-v1';
   }
@@ -12,12 +12,20 @@ class SpotDB {
       const request = indexedDB.open(this.dbName, this.version);
       request.onupgradeneeded = () => {
         const db = request.result;
+        let expenseStore;
         if (!db.objectStoreNames.contains('expenses')) {
-          const store = db.createObjectStore('expenses', { keyPath: 'id' });
-          store.createIndex('date', 'date', { unique: false });
-          store.createIndex('category', 'category', { unique: false });
-          store.createIndex('merchant', 'merchant', { unique: false });
+          expenseStore = db.createObjectStore('expenses', { keyPath: 'id' });
+          expenseStore.createIndex('date', 'date', { unique: false });
+          expenseStore.createIndex('category', 'category', { unique: false });
+          expenseStore.createIndex('merchant', 'merchant', { unique: false });
+        } else {
+          expenseStore = request.transaction.objectStore('expenses');
         }
+
+        if (expenseStore && !expenseStore.indexNames.contains('placeName')) {
+          expenseStore.createIndex('placeName', 'placeName', { unique: false });
+        }
+
         if (!db.objectStoreNames.contains('settings')) {
           db.createObjectStore('settings', { keyPath: 'key' });
         }

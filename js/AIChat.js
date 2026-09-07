@@ -39,12 +39,13 @@ class AIChat {
   }
 
   prepareLayout() {
+    // display는 .screen-view / .screen-view.active CSS가 관리해야 합니다.
+    // 여기서 display:flex를 인라인으로 지정하면 비활성 AI 화면도 항상 노출됩니다.
     this.view.style.overflow = 'hidden';
     this.view.style.minHeight = '0';
-    this.view.style.display = 'flex';
     this.view.style.flexDirection = 'column';
 
-    this.log.style.flex = '1 1 auto';
+    this.log.style.flex = '1 1 0%';
     this.log.style.minHeight = '0';
     this.log.style.overflowY = 'auto';
     this.log.style.overscrollBehavior = 'contain';

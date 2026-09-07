@@ -16,12 +16,14 @@ class AIChat {
     this.input = view.querySelector('input[placeholder="무엇이든 물어보세요"]') || view.querySelector('input[type="text"]');
     this.sendButton = this.input?.parentElement?.querySelector('button');
     this.log = view.querySelector('header')?.parentElement;
+    this.inputArea = this.input?.parentElement?.parentElement;
 
-    if (!this.input || !this.sendButton || !this.log) {
+    if (!this.input || !this.sendButton || !this.log || !this.inputArea) {
       console.error('SPOT AI Chat: 채팅 UI 요소를 찾지 못했습니다.');
       return;
     }
 
+    this.prepareLayout();
     this.prepareLog();
     this.sendButton.type = 'button';
     this.sendButton.setAttribute('aria-label', '메시지 보내기');
@@ -36,15 +38,34 @@ class AIChat {
     this.addAssistant('안녕하세요! 실제로 등록된 지출 데이터를 바탕으로 소비 패턴을 함께 살펴볼게요. 무엇이 궁금한가요?');
   }
 
+  prepareLayout() {
+    this.view.style.overflow = 'hidden';
+    this.view.style.minHeight = '0';
+    this.view.style.display = 'flex';
+    this.view.style.flexDirection = 'column';
+
+    this.log.style.flex = '1 1 auto';
+    this.log.style.minHeight = '0';
+    this.log.style.overflowY = 'auto';
+    this.log.style.overscrollBehavior = 'contain';
+    this.log.style.scrollBehavior = 'smooth';
+    this.log.style.paddingRight = '2px';
+    this.log.style.paddingBottom = '18px';
+
+    this.inputArea.style.flex = '0 0 auto';
+    this.inputArea.style.position = 'relative';
+    this.inputArea.style.zIndex = '5';
+    this.inputArea.style.paddingTop = '10px';
+    this.inputArea.style.paddingBottom = '2px';
+    this.inputArea.style.background = '#08233D';
+  }
+
   prepareLog() {
     const header = this.log.querySelector('header');
     [...this.log.children].forEach(child => {
       if (child !== header) child.remove();
     });
     this.log.id = 'spot-ai-chat-log';
-    this.log.style.overflowY = 'auto';
-    this.log.style.paddingBottom = '12px';
-    this.log.style.maxHeight = 'calc(100% - 4px)';
   }
 
   async send() {
@@ -119,7 +140,7 @@ class AIChat {
   addUser(text) {
     const wrap = document.createElement('div');
     wrap.className = 'flex justify-end mt-3';
-    wrap.innerHTML = `<div class="bg-white/10 border border-white/20 text-white px-3.5 py-2 rounded-2xl rounded-tr-none max-w-[80%] font-medium text-[11.5px] whitespace-pre-wrap break-words">${this.escapeHtml(text)}</div>`;
+    wrap.innerHTML = `<div class="bg-white/10 border border-white/20 text-white px-3.5 py-2 rounded-2xl rounded-tr-none max-w-[80%] font-medium text-[11.5px] whitespace-pre-wrap break-words leading-relaxed">${this.escapeHtml(text)}</div>`;
     this.log.appendChild(wrap);
     this.scrollToBottom();
     return wrap;
@@ -131,10 +152,17 @@ class AIChat {
     if (temporary) wrap.dataset.temporary = 'true';
     wrap.innerHTML = `
       <div class="w-6 h-6 rounded-full bg-amber-400 text-[#08233D] font-black flex items-center justify-center shrink-0 text-[9px]">AI</div>
-      <div class="bg-white text-slate-900 px-3.5 py-2.5 rounded-2xl rounded-tl-none max-w-[85%] shadow text-[11.5px] whitespace-pre-wrap break-words">${this.escapeHtml(text)}</div>`;
+      <div class="bg-white text-slate-900 px-3.5 py-2.5 rounded-2xl rounded-tl-none max-w-[88%] shadow text-[11.5px] whitespace-pre-wrap break-words leading-relaxed">${this.formatReply(text)}</div>`;
     this.log.appendChild(wrap);
     this.scrollToBottom();
     return wrap;
+  }
+
+  formatReply(value) {
+    let safe = this.escapeHtml(value);
+    safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    safe = safe.replace(/^[-•]\s+/gm, '• ');
+    return safe;
   }
 
   scrollToBottom() {

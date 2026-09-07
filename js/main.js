@@ -29,6 +29,12 @@
         console.error('SPOT IndexedDB 초기화 실패. 기존 로컬 저장소를 사용합니다.', error);
       }
 
+      loadScript('js/MapManager.js', () => {
+        const mapManager = new MapManager(document, expenseManager);
+        window.spotMapManager = mapManager;
+        mapManager.start();
+      }, 'MapManager.js를 불러오지 못했습니다.');
+
       loadScript('js/AnalyticsManager.js', () => {
         const analyticsManager = new AnalyticsManager(document, expenseManager);
         window.spotAnalyticsManager = analyticsManager;

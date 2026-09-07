@@ -12,6 +12,16 @@
     window.spotExpenseManager = expenseManager;
     expenseManager.start();
 
+    const analyticsScript = document.createElement('script');
+    analyticsScript.src = 'js/AnalyticsManager.js';
+    analyticsScript.onload = () => {
+      const analyticsManager = new AnalyticsManager(document, expenseManager);
+      window.spotAnalyticsManager = analyticsManager;
+      analyticsManager.start();
+    };
+    analyticsScript.onerror = () => console.error('AnalyticsManager.js를 불러오지 못했습니다.');
+    document.body.appendChild(analyticsScript);
+
     const aiScript = document.createElement('script');
     aiScript.src = 'js/AIInsight.js';
     aiScript.onload = () => {

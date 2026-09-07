@@ -18,6 +18,16 @@
       const aiInsight = new AIInsight(document, expenseManager);
       window.spotAIInsight = aiInsight;
       aiInsight.start();
+
+      const chatScript = document.createElement('script');
+      chatScript.src = 'js/AIChat.js';
+      chatScript.onload = () => {
+        const aiChat = new AIChat(document, expenseManager, aiInsight);
+        window.spotAIChat = aiChat;
+        aiChat.start();
+      };
+      chatScript.onerror = () => console.error('AIChat.js를 불러오지 못했습니다.');
+      document.body.appendChild(chatScript);
     };
     aiScript.onerror = () => console.error('AIInsight.js를 불러오지 못했습니다.');
     document.body.appendChild(aiScript);

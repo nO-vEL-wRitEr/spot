@@ -4,13 +4,7 @@ class AIInsight {
     this.expenseManager = expenseManager;
     this.modelKey = 'spot-gemini-model-v1';
     this.cacheKey = 'spot-ai-insight-cache-v1';
-    this.models = [
-      'gemini-3.8-flash',
-      'gemini-3.7-flash',
-      'gemini-3.6-flash',
-      'gemini-3.5-flash',
-      'gemini-3.5-flash-lite'
-    ];
+    this.models = ['gemini-3.8-flash','gemini-3.7-flash','gemini-3.6-flash','gemini-3.5-flash','gemini-3.5-flash-lite'];
     this.model = localStorage.getItem(this.modelKey) || 'gemini-3.8-flash';
     if (!this.models.includes(this.model)) this.model = 'gemini-3.8-flash';
     this.lastSignature = '';
@@ -114,16 +108,53 @@ class AIInsight {
     const previousWeekTotal = sumBetween(prevWeekStart, weekStart);
 
     const categoryTotals = {};
-    const merchantTotals = {};
+    const merchantStats = {};
     currentMonth.forEach(e => {
-      categoryTotals[e.category || '기타'] = (categoryTotals[e.category || '기타'] || 0) + e.amount;
-      merchantTotals[e.merchant || '기타'] = (merchantTotals[e.merchant || '기타'] || 0) + e.amount;
+      const category = e.category || '기타';
+      const merchant = e.placeName || e.merchant || '기타';
+      categoryTotals[category] = (categoryTotals[category] || 0) + e.amount;
+      if (!merchantStats[merchant]) merchantStats[merchant] = { merchant, amount: 0, count: 0, category };
+      merchantStats[merchant].amount += e.amount;
+      merchantStats[merchant].count += 1;
     });
 
     const topCategories = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([category, amount]) => ({ category, amount }));
-    const topMerchants = Object.entries(merchantTotals).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([merchant, amount]) => ({ merchant, amount }));
+    const merchantList = Object.values(merchantStats);
+    const topMerchants = merchantList.sort((a, b) => b.amount - a.amount).slice(0, 5);
+    const frequentMerchants = [...merchantList].filter(m => m.count >= 2).sort((a, b) => b.count - a.count || b.amount - a.amount).slice(0, 5);
+    const highValueExpenses = [...currentMonth].sort((a, b) => b.amount - a.amount).slice(0, 5).map(e => ({
+      merchant: e.placeName || e.merchant || '기타',
+      category: e.category || '기타',
+      amount: e.amount,
+      date: e.date
+    }));
+
+    const repeatedCategoryGroups = Object.entries(categoryTotals)
+      .map(([category, amount]) => ({
+        category,
+        amount,
+        count: currentMonth.filter(e => (e.category || '기타') === category).length
+      }))
+      .filter(x => x.count >= 2)
+      .sort((a, b) => b.count - a.count || b.amount - a.amount)
+      .slice(0, 5);
+
     const pctChange = (current, previous) => previous > 0 ? Math.round(((current - previous) / previous) * 100) : null;
     const budget = this.getBudget();
+
+    const patternClusters = [];
+    if (frequentMerchants[0]) {
+      const m = frequentMerchants[0];
+      patternClusters.push({ type: 'frequent_merchant', label: m.merchant, count: m.count, amount: m.amount, category: m.category });
+    }
+    if (repeatedCategoryGroups[0]) {
+      const c = repeatedCategoryGroups[0];
+      patternClusters.push({ type: 'repeated_category', label: c.category, count: c.count, amount: c.amount });
+    }
+    if (highValueExpenses[0]) {
+      const h = highValueExpenses[0];
+      patternClusters.push({ type: 'high_value_expense', label: h.merchant, amount: h.amount, category: h.category, date: h.date });
+    }
 
     return {
       generatedAt: now.toISOString(),
@@ -138,7 +169,11 @@ class AIInsight {
       monthlyBudget: budget,
       budgetUsedPercent: budget > 0 ? Math.round((monthlyTotal / budget) * 100) : null,
       topCategories,
-      topMerchants
+      topMerchants,
+      frequentMerchants,
+      repeatedCategoryGroups,
+      highValueExpenses,
+      patternClusters
     };
   }
 
@@ -151,6 +186,9 @@ class AIInsight {
       monthlyBudget: summary.monthlyBudget,
       transactionCount: summary.transactionCount,
       topCategories: summary.topCategories,
+      frequentMerchants: summary.frequentMerchants,
+      repeatedCategoryGroups: summary.repeatedCategoryGroups,
+      highValueExpenses: summary.highValueExpenses,
       model: this.model
     });
   }
@@ -162,18 +200,33 @@ class AIInsight {
     let tip = '지출을 추가할수록 AI 분석이 더 정확해져요.';
 
     if (s.transactionCount > 0) {
+      const frequent = s.frequentMerchants[0];
+      const repeatedCategory = s.repeatedCategoryGroups[0];
+      const high = s.highValueExpenses[0];
       const top = s.topCategories[0];
-      if (top && s.monthlyTotal > 0) {
+
+      if (frequent) {
+        headline = `${frequent.merchant}에서 이번 달 ${frequent.count}번 지출했어요.`;
+        detail = `반복 지출 합계 ${this.money(frequent.amount)} · ${frequent.category} 소비 패턴으로 묶였어요.`;
+      } else if (repeatedCategory) {
+        headline = `${repeatedCategory.category} 지출이 ${repeatedCategory.count}건으로 가장 반복돼요.`;
+        detail = `반복 지출 합계 ${this.money(repeatedCategory.amount)} · 같은 유형 소비가 자주 나타나요.`;
+      } else if (top && s.monthlyTotal > 0) {
         const share = Math.round((top.amount / s.monthlyTotal) * 100);
         headline = `${top.category}가 이번 달 지출의 ${share}%로 가장 커요.`;
         detail = `${top.category} ${this.money(top.amount)} · 전체 ${this.money(s.monthlyTotal)}`;
       }
+
+      if (high) {
+        tip = `가장 큰 단일 지출은 ${high.merchant} ${this.money(high.amount)}이에요.`;
+      }
       if (s.monthlyBudget > 0) {
-        tip = `월 예산의 ${s.budgetUsedPercent}%를 사용했어요. 남은 금액은 ${this.money(Math.max(0, s.monthlyBudget - s.monthlyTotal))}이에요.`;
+        const budgetTip = `예산의 ${s.budgetUsedPercent}% 사용 · 남은 금액 ${this.money(Math.max(0, s.monthlyBudget - s.monthlyTotal))}`;
+        tip = `${tip} ${budgetTip}`;
       }
     }
 
-    this.paint({ headline, detail, tip }, '데이터 기반 기본 분석');
+    this.paint({ headline, detail, tip }, '데이터 기반 패턴 분석');
   }
 
   async requestInsight(force = false) {
@@ -181,7 +234,6 @@ class AIInsight {
     const sig = this.signature(summary);
     if (!force && sig === this.lastSignature) return;
     this.lastSignature = sig;
-
     if (!summary.transactionCount) return;
 
     const cached = this.readCache(sig);
@@ -190,7 +242,7 @@ class AIInsight {
       return;
     }
 
-    this.setStatus('Gemini가 실제 소비 데이터를 분석 중이에요…');
+    this.setStatus('Gemini가 반복 지출과 큰 지출을 함께 분석 중이에요…');
     try {
       const response = await fetch('/api/gemini', {
         method: 'POST',
@@ -221,9 +273,8 @@ class AIInsight {
   }
 
   writeCache(sig, payload) {
-    try {
-      localStorage.setItem(this.cacheKey, JSON.stringify({ signature: sig, savedAt: Date.now(), payload }));
-    } catch (_) {}
+    try { localStorage.setItem(this.cacheKey, JSON.stringify({ signature: sig, savedAt: Date.now(), payload })); }
+    catch (_) {}
   }
 
   paint(insight, modelLabel = '') {

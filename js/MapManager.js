@@ -37,6 +37,15 @@ class MapManager {
       <div id="spot-map-status" class="absolute top-2.5 left-2.5 right-2.5 z-10 pointer-events-none">
         <span class="inline-block bg-white/95 px-2.5 py-1 rounded-lg text-[10px] font-bold text-[#08233D] shadow border border-slate-200">지도를 불러오는 중…</span>
       </div>
+      <div id="spot-map-frequency-legend" class="absolute bottom-2.5 left-2.5 z-10 bg-white/95 border border-slate-200 shadow rounded-xl px-2.5 py-2 text-[9px] font-bold text-[#334155]">
+        <div class="font-black text-[#08233D] mb-1">방문 빈도</div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="flex items-center gap-1"><i class="w-2.5 h-2.5 rounded-full border border-slate-400 bg-white"></i>1회</span>
+          <span class="flex items-center gap-1"><i class="w-2.5 h-2.5 rounded-full bg-[#22C55E]"></i>2~3회</span>
+          <span class="flex items-center gap-1"><i class="w-2.5 h-2.5 rounded-full bg-[#F59E0B]"></i>4~6회</span>
+          <span class="flex items-center gap-1"><i class="w-2.5 h-2.5 rounded-full bg-[#EF4444]"></i>7회+</span>
+        </div>
+      </div>
       <button id="spot-map-my-location" type="button" class="absolute bottom-2.5 right-2.5 z-10 w-9 h-9 rounded-full bg-white text-[#08233D] shadow border border-slate-200 text-sm font-black" aria-label="내 위치">◎</button>`;
 
     const search = document.createElement('form');
@@ -68,7 +77,7 @@ class MapManager {
     if (this.detailCard) {
       this.detailCard.innerHTML = `
         <div class="text-sm font-black text-[#161616] mb-1">지점을 선택해 주세요</div>
-        <div class="text-[11px] text-[#77736C] leading-relaxed">등록한 지점명이 지도에 마커로 표시됩니다. 마커를 누르면 해당 지점의 방문·지출 통계를 볼 수 있어요.</div>`;
+        <div class="text-[11px] text-[#77736C] leading-relaxed">등록한 지점명이 지도에 마커로 표시됩니다. 마커 색이 진할수록 자주 방문한 곳이에요.</div>`;
     }
   }
 
@@ -271,19 +280,48 @@ class MapManager {
 
       const position = new kakao.maps.LatLng(lat, lng);
       positions.push(position);
-      const marker = new kakao.maps.Marker({ map: this.map, position, title: placeName });
+      const visits = new Set(items.map(item => String(item.date || '').slice(0, 10))).size;
+      const marker = new kakao.maps.Marker({
+        map: this.map,
+        position,
+        title: `${placeName} · ${visits}회 방문`,
+        image: this.createFrequencyMarkerImage(visits)
+      });
       this.markers.push(marker);
       kakao.maps.event.addListener(marker, 'click', () => {
         this.map.panTo(position);
         this.showPlaceDetail(placeName, items, address);
-        this.infoWindow?.setContent(`<div style="padding:6px 9px;font-size:11px;font-weight:700;white-space:nowrap">${this.escapeHtml(placeName)}</div>`);
+        const tier = this.getFrequencyTier(visits);
+        this.infoWindow?.setContent(`<div style="padding:6px 9px;font-size:11px;font-weight:700;white-space:nowrap">${this.escapeHtml(placeName)} · ${visits}회 · ${tier.label}</div>`);
         this.infoWindow?.open(this.map, marker);
       });
     }
 
     if (changed && this.expenseManager?.save) this.expenseManager.save();
-    this.setStatus(`저장된 소비 지점 ${this.markers.length}곳`);
+    this.setStatus(`저장된 소비 지점 ${this.markers.length}곳 · 색상은 방문 빈도를 나타내요.`);
     if (positions.length) this.fitPositions(positions);
+  }
+
+  getFrequencyTier(visits) {
+    const count = Number(visits || 0);
+    if (count >= 7) return { color: '#EF4444', label: '매우 자주 방문' };
+    if (count >= 4) return { color: '#F59E0B', label: '자주 방문' };
+    if (count >= 2) return { color: '#22C55E', label: '반복 방문' };
+    return { color: '#FFFFFF', label: '1회 방문' };
+  }
+
+  createFrequencyMarkerImage(visits) {
+    const tier = this.getFrequencyTier(visits);
+    const textColor = tier.color === '#FFFFFF' ? '#08233D' : '#FFFFFF';
+    const stroke = tier.color === '#FFFFFF' ? '#08233D' : '#FFFFFF';
+    const count = Math.min(Number(visits || 1), 99);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="34" height="42" viewBox="0 0 34 42"><path d="M17 1C8.16 1 1 8.16 1 17c0 11.5 16 24 16 24s16-12.5 16-24C33 8.16 25.84 1 17 1z" fill="${tier.color}" stroke="${stroke}" stroke-width="2"/><circle cx="17" cy="17" r="9" fill="${tier.color === '#FFFFFF' ? '#F8FAFC' : 'rgba(255,255,255,.18)'}"/><text x="17" y="21" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="${textColor}">${count}</text></svg>`;
+    const src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    return new kakao.maps.MarkerImage(
+      src,
+      new kakao.maps.Size(34, 42),
+      { offset: new kakao.maps.Point(17, 42) }
+    );
   }
 
   scheduleRender() {
@@ -368,6 +406,7 @@ class MapManager {
     const total = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const visits = new Set(expenses.map(item => String(item.date || '').slice(0, 10))).size;
     const latest = [...expenses].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
+    const tier = this.getFrequencyTier(visits);
 
     this.detailCard.innerHTML = `
       <div class="flex items-start justify-between gap-2 mb-2">
@@ -375,7 +414,7 @@ class MapManager {
           <div class="text-sm font-black text-[#161616] truncate">${this.escapeHtml(placeName)}</div>
           <div class="text-[10px] text-[#77736C] mt-0.5 truncate">${this.escapeHtml(address || '주소 정보 없음')}</div>
         </div>
-        <span class="spot-stat-pill">지도 지점</span>
+        <span class="spot-stat-pill" style="border-color:${tier.color};">${tier.label}</span>
       </div>
       <div class="grid grid-cols-3 gap-2 text-center border-y border-slate-100 py-2.5 mb-3 text-xs">
         <div><div class="text-[#77736C] text-[11px]">방문일</div><div class="font-black text-[#08233D]">${visits}일</div></div>

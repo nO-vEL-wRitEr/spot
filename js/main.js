@@ -40,6 +40,12 @@
           const analyticsManager = new AnalyticsManager(document, expenseManager);
           window.spotAnalyticsManager = analyticsManager;
           analyticsManager.start();
+
+          loadScript('js/TimeAnalyticsManager.js', () => {
+            const timeAnalyticsManager = new TimeAnalyticsManager(document, expenseManager, analyticsManager);
+            window.spotTimeAnalyticsManager = timeAnalyticsManager;
+            timeAnalyticsManager.start();
+          }, 'TimeAnalyticsManager.js를 불러오지 못했습니다.');
         }, 'AnalyticsManager.js를 불러오지 못했습니다.');
 
         loadScript('js/AIInsight.js', () => {

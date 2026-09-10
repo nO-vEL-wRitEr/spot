@@ -34,6 +34,12 @@
           const bioManager = new BioManager(document, spotDB);
           window.spotBioManager = bioManager;
           await bioManager.start();
+
+          loadScript('js/AdditiveManager.js', () => {
+            const additiveManager = new AdditiveManager(document);
+            window.spotAdditiveManager = additiveManager;
+            additiveManager.start();
+          }, 'AdditiveManager.js를 불러오지 못했습니다.');
         }, 'BioManager.js를 불러오지 못했습니다.');
 
         loadScript('js/MapManager.js', () => {

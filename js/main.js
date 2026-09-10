@@ -30,6 +30,12 @@
       }
 
       const startFeatureManagers = () => {
+        loadScript('js/BioManager.js', async () => {
+          const bioManager = new BioManager(document, spotDB);
+          window.spotBioManager = bioManager;
+          await bioManager.start();
+        }, 'BioManager.js를 불러오지 못했습니다.');
+
         loadScript('js/MapManager.js', () => {
           const mapManager = new MapManager(document, expenseManager);
           window.spotMapManager = mapManager;

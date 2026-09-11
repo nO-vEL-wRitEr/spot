@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spot.local/schemas/expense.schema.json",
+  "title": "SPOT Expense Record",
+  "type": "object",
+  "required": ["merchant", "amount", "category", "date", "source"],
+  "properties": {
+    "id": { "type": ["string", "null"] },
+    "merchant": { "type": "string", "minLength": 1 },
+    "placeName": { "type": ["string", "null"] },
+    "placeAddress": { "type": ["string", "null"] },
+    "latitude": { "type": ["number", "null"] },
+    "longitude": { "type": ["number", "null"] },
+    "amount": { "type": "number", "minimum": 0 },
+    "category": { "type": "string" },
+    "date": { "type": "string" },
+    "memo": { "type": "string" },
+    "source": { "enum": ["manual", "ocr", "csv", "demo"] },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "price": { "type": ["number", "null"] },
+          "quantity": { "type": ["number", "null"] },
+          "nutrition": { "type": ["object", "null"] },
+          "allergens": { "type": "array", "items": { "type": "string" } },
+          "additives": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "properties": {
+        "hour": { "type": "integer", "minimum": 0, "maximum": 23 },
+        "timeBand": { "type": "string" },
+        "isFoodRelated": { "type": "boolean" },
+        "transactionCount": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "additionalProperties": true
+}

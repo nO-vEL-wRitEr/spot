@@ -17,68 +17,84 @@
     const spotDB = new SpotDB();
     window.spotDB = spotDB;
 
-    loadScript('js/ExpenseManager.js', async () => {
-      const expenseManager = new ExpenseManager(document, app);
-      window.spotExpenseManager = expenseManager;
-      expenseManager.start();
+    loadScript('js/DataPipeline.js', () => {
+      loadScript('js/ExpenseManager.js', async () => {
+        const expenseManager = new ExpenseManager(document, app);
 
-      try {
-        await spotDB.hydrateManager(expenseManager);
-        console.info('SPOT IndexedDB 연결 완료');
-      } catch (error) {
-        console.error('SPOT IndexedDB 초기화 실패. 기존 로컬 저장소를 사용합니다.', error);
-      }
+        // OCR 원문을 데이터 파이프라인에서 정형 레코드로 변환합니다.
+        // 파이프라인에 문제가 생기면 기존 파서를 자동으로 사용합니다.
+        const fallbackParseReceipt = expenseManager.parseReceipt.bind(expenseManager);
+        expenseManager.parseReceipt = text => {
+          try {
+            const structured = window.SPOTDataPipeline?.receiptToExpense?.(text);
+            return structured || fallbackParseReceipt(text);
+          } catch (error) {
+            console.warn('SPOT DataPipeline 변환 실패. 기존 OCR 파서를 사용합니다.', error);
+            return fallbackParseReceipt(text);
+          }
+        };
 
-      const startFeatureManagers = () => {
-        loadScript('js/BioManager.js', async () => {
-          const bioManager = new BioManager(document, spotDB);
-          window.spotBioManager = bioManager;
-          await bioManager.start();
+        window.spotExpenseManager = expenseManager;
+        expenseManager.start();
 
-          loadScript('js/AdditiveManager.js', () => {
-            const additiveManager = new AdditiveManager(document);
-            window.spotAdditiveManager = additiveManager;
-            additiveManager.start();
-          }, 'AdditiveManager.js를 불러오지 못했습니다.');
-        }, 'BioManager.js를 불러오지 못했습니다.');
+        try {
+          await spotDB.hydrateManager(expenseManager);
+          console.info('SPOT IndexedDB 연결 완료');
+        } catch (error) {
+          console.error('SPOT IndexedDB 초기화 실패. 기존 로컬 저장소를 사용합니다.', error);
+        }
 
-        loadScript('js/MapManager.js', () => {
-          const mapManager = new MapManager(document, expenseManager);
-          window.spotMapManager = mapManager;
-          mapManager.start();
-        }, 'MapManager.js를 불러오지 못했습니다.');
+        const startFeatureManagers = () => {
+          loadScript('js/BioManager.js', async () => {
+            const bioManager = new BioManager(document, spotDB);
+            window.spotBioManager = bioManager;
+            await bioManager.start();
 
-        loadScript('js/AnalyticsManager.js', () => {
-          const analyticsManager = new AnalyticsManager(document, expenseManager);
-          window.spotAnalyticsManager = analyticsManager;
-          analyticsManager.start();
+            loadScript('js/AdditiveManager.js', () => {
+              const additiveManager = new AdditiveManager(document);
+              window.spotAdditiveManager = additiveManager;
+              additiveManager.start();
+            }, 'AdditiveManager.js를 불러오지 못했습니다.');
+          }, 'BioManager.js를 불러오지 못했습니다.');
 
-          loadScript('js/TimeAnalyticsManager.js', () => {
-            const timeAnalyticsManager = new TimeAnalyticsManager(document, expenseManager, analyticsManager);
-            window.spotTimeAnalyticsManager = timeAnalyticsManager;
-            timeAnalyticsManager.start();
-          }, 'TimeAnalyticsManager.js를 불러오지 못했습니다.');
-        }, 'AnalyticsManager.js를 불러오지 못했습니다.');
+          loadScript('js/MapManager.js', () => {
+            const mapManager = new MapManager(document, expenseManager);
+            window.spotMapManager = mapManager;
+            mapManager.start();
+          }, 'MapManager.js를 불러오지 못했습니다.');
 
-        loadScript('js/AIInsight.js', () => {
-          const aiInsight = new AIInsight(document, expenseManager);
-          window.spotAIInsight = aiInsight;
-          aiInsight.start();
+          loadScript('js/AnalyticsManager.js', () => {
+            const analyticsManager = new AnalyticsManager(document, expenseManager);
+            window.spotAnalyticsManager = analyticsManager;
+            analyticsManager.start();
 
-          loadScript('js/AIChat.js', () => {
-            const aiChat = new AIChat(document, expenseManager, aiInsight);
-            window.spotAIChat = aiChat;
-            aiChat.start();
-          }, 'AIChat.js를 불러오지 못했습니다.');
-        }, 'AIInsight.js를 불러오지 못했습니다.');
-      };
+            loadScript('js/TimeAnalyticsManager.js', () => {
+              const timeAnalyticsManager = new TimeAnalyticsManager(document, expenseManager, analyticsManager);
+              window.spotTimeAnalyticsManager = timeAnalyticsManager;
+              timeAnalyticsManager.start();
+            }, 'TimeAnalyticsManager.js를 불러오지 못했습니다.');
+          }, 'AnalyticsManager.js를 불러오지 못했습니다.');
 
-      loadScript('js/LanguageManager.js', async () => {
-        const languageManager = new LanguageManager(document, spotDB);
-        window.spotLanguageManager = languageManager;
-        await languageManager.start();
-        startFeatureManagers();
-      }, 'LanguageManager.js를 불러오지 못했습니다.');
-    }, 'ExpenseManager.js를 불러오지 못했습니다.');
+          loadScript('js/AIInsight.js', () => {
+            const aiInsight = new AIInsight(document, expenseManager);
+            window.spotAIInsight = aiInsight;
+            aiInsight.start();
+
+            loadScript('js/AIChat.js', () => {
+              const aiChat = new AIChat(document, expenseManager, aiInsight);
+              window.spotAIChat = aiChat;
+              aiChat.start();
+            }, 'AIChat.js를 불러오지 못했습니다.');
+          }, 'AIInsight.js를 불러오지 못했습니다.');
+        };
+
+        loadScript('js/LanguageManager.js', async () => {
+          const languageManager = new LanguageManager(document, spotDB);
+          window.spotLanguageManager = languageManager;
+          await languageManager.start();
+          startFeatureManagers();
+        }, 'LanguageManager.js를 불러오지 못했습니다.');
+      }, 'ExpenseManager.js를 불러오지 못했습니다.');
+    }, 'DataPipeline.js를 불러오지 못했습니다.');
   }, 'SpotDB.js를 불러오지 못했습니다.');
 })();

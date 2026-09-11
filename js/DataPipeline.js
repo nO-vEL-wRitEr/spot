@@ -1,12 +1,18 @@
 class DataPipeline {
   constructor() {
     this.categoryRules = [
-      ['카페', /카페|커피|coffee|starbucks|메가커피|투썸|이디야/i],
-      ['마트', /마트|market|편의점|cu|gs25|세븐일레븐|emart|홈플러스/i],
-      ['식비', /배달|식당|restaurant|burger|치킨|피자|김밥|떡볶이|우동|포케/i],
-      ['쇼핑', /올리브영|쇼핑|shop|store|무신사|다이소/i],
-      ['교통', /택시|버스|지하철|교통|카카오t|uber/i]
+      ['분식', /떡볶이|김밥|순대|튀김|어묵|우동|라볶이|분식/i],
+      ['한식', /한식|국밥|찌개|전골|불고기|비빔밥|삼겹살|갈비|백반|냉면|국수|설렁탕|감자탕/i],
+      ['일식', /초밥|스시|라멘|우동|돈카츠|돈까스|사시미|일식/i],
+      ['중식', /짜장|짬뽕|탕수육|마라|훠궈|중식|딤섬/i],
+      ['양식', /파스타|스테이크|리조또|샐러드|브런치|양식/i],
+      ['패스트푸드', /burger|햄버거|맥도날드|롯데리아|버거킹|맘스터치|kfc|피자|치킨/i],
+      ['음료', /카페|커피|coffee|starbucks|스타벅스|메가커피|투썸|이디야|음료|주스|에이드|차|tea|탄산/i],
+      ['간식', /디저트|dessert|빵|베이커리|케이크|쿠키|과자|아이스크림|초콜릿|도넛|간식/i],
+      ['편의점·마트', /마트|market|편의점|cu|gs25|세븐일레븐|emart|이마트|홈플러스|롯데마트/i],
+      ['기타 식품', /배달|식당|restaurant|food|meal|식품/i]
     ];
+    this.foodCategories = this.categoryRules.map(([name]) => name);
   }
 
   normalizeText(text) {
@@ -24,8 +30,8 @@ class DataPipeline {
     const merchant = this.extractMerchant(lines);
     const amount = this.extractAmount(text);
     const date = this.extractDate(text);
-    const category = this.inferCategory(`${merchant} ${text}`);
     const items = this.extractItems(lines, amount);
+    const category = this.inferCategory(`${merchant} ${items.map(item => item.name).join(' ')} ${text}`);
     const features = this.buildFeatures({ amount, category, date, merchant, items });
 
     return {
@@ -68,7 +74,7 @@ class DataPipeline {
     for (const [category, rule] of this.categoryRules) {
       if (rule.test(text)) return category;
     }
-    return '기타';
+    return '기타 식품';
   }
 
   extractItems(lines, totalAmount = 0) {
@@ -95,7 +101,7 @@ class DataPipeline {
     return {
       hour,
       timeBand: this.timeBand(hour),
-      isFoodRelated: ['식비', '카페', '마트'].includes(record.category),
+      isFoodRelated: this.foodCategories.includes(record.category),
       transactionCount: 1,
       itemCount: Array.isArray(record.items) ? record.items.length : 0,
       amountLog: record.amount > 0 ? Number(Math.log1p(record.amount).toFixed(4)) : 0
@@ -118,7 +124,7 @@ class DataPipeline {
     const memo = String(record.memo || '').replace(/\s+/g, ' ').slice(0, 300);
     return [
       `상호 ${record.merchant || '미상'}`,
-      `카테고리 ${record.category || '기타'}`,
+      `식품 카테고리 ${record.category || '기타 식품'}`,
       `금액 ${Number(record.amount || 0)}원`,
       `시간대 ${this.timeBand(hour)}`,
       itemNames.length ? `품목 ${itemNames.join(', ')}` : '',
@@ -129,11 +135,11 @@ class DataPipeline {
   toEmbeddingRecord(expense) {
     return {
       id: expense.id || null,
-      entityType: 'expense',
+      entityType: 'food_expense',
       embeddingText: expense.embeddingText || this.buildEmbeddingText(expense),
       metadata: {
         merchant: expense.merchant || '',
-        category: expense.category || '기타',
+        category: expense.category || '기타 식품',
         amount: Number(expense.amount || 0),
         timeBand: expense.features?.timeBand || this.timeBand(new Date(expense.date).getHours())
       },

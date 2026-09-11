@@ -65,6 +65,19 @@
 
           loadScript('js/AnalyticsManager.js', () => {
             const analyticsManager = new AnalyticsManager(document, expenseManager);
+            analyticsManager.categoryDescriptions = {
+              ...analyticsManager.categoryDescriptions,
+              '한식': '국밥, 찌개, 백반, 고기류 등 한식 중심의 식사 소비예요.',
+              '분식': '떡볶이, 김밥, 순대, 튀김 등 분식류 소비예요.',
+              '일식': '초밥, 라멘, 돈카츠 등 일식류 소비예요.',
+              '중식': '짜장면, 짬뽕, 마라 등 중식류 소비예요.',
+              '양식': '파스타, 스테이크, 리조또 등 양식류 소비예요.',
+              '패스트푸드': '햄버거, 치킨, 피자 등 빠르게 소비하는 외식 항목이에요.',
+              '음료': '커피, 차, 탄산, 주스 등 음료 소비예요.',
+              '간식': '과자, 빵, 디저트, 아이스크림 등 간식 소비예요.',
+              '편의점·마트': '편의점이나 마트에서 구매한 식품·음료 소비예요.',
+              '기타 식품': '다른 식품 분류에 포함되지 않은 식품 소비예요.'
+            };
             window.spotAnalyticsManager = analyticsManager;
             analyticsManager.start();
 
@@ -88,12 +101,18 @@
           }, 'AIInsight.js를 불러오지 못했습니다.');
         };
 
-        loadScript('js/LanguageManager.js', async () => {
-          const languageManager = new LanguageManager(document, spotDB);
-          window.spotLanguageManager = languageManager;
-          await languageManager.start();
-          startFeatureManagers();
-        }, 'LanguageManager.js를 불러오지 못했습니다.');
+        loadScript('js/FoodCategoryManager.js', () => {
+          const foodCategoryManager = new FoodCategoryManager(document, expenseManager);
+          window.spotFoodCategoryManager = foodCategoryManager;
+          foodCategoryManager.start();
+
+          loadScript('js/LanguageManager.js', async () => {
+            const languageManager = new LanguageManager(document, spotDB);
+            window.spotLanguageManager = languageManager;
+            await languageManager.start();
+            startFeatureManagers();
+          }, 'LanguageManager.js를 불러오지 못했습니다.');
+        }, 'FoodCategoryManager.js를 불러오지 못했습니다.');
       }, 'ExpenseManager.js를 불러오지 못했습니다.');
     }, 'DataPipeline.js를 불러오지 못했습니다.');
   }, 'SpotDB.js를 불러오지 못했습니다.');

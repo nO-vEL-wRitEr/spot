@@ -1,0 +1,13 @@
+{
+  "id": "sample-expense-001",
+  "entityType": "expense",
+  "embeddingText": "상호 스타벅스 서면점 | 카테고리 카페 | 금액 11300원 | 시간대 오후 | 품목 아메리카노, 샌드위치",
+  "metadata": {
+    "merchant": "스타벅스 서면점",
+    "category": "카페",
+    "amount": 11300,
+    "timeBand": "오후"
+  },
+  "vector": null,
+  "vectorStatus": "not_generated"
+}

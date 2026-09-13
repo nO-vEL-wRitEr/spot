@@ -1,7 +1,7 @@
 class SpotDB {
   constructor() {
     this.dbName = 'spot-db';
-    this.version = 2;
+    this.version = 3;
     this.db = null;
     this.migrationKey = 'spot-indexeddb-migrated-v1';
   }
@@ -24,6 +24,9 @@ class SpotDB {
 
         if (expenseStore && !expenseStore.indexNames.contains('placeName')) {
           expenseStore.createIndex('placeName', 'placeName', { unique: false });
+        }
+        if (expenseStore && !expenseStore.indexNames.contains('foodSubcategory')) {
+          expenseStore.createIndex('foodSubcategory', 'foodSubcategory', { unique: false });
         }
 
         if (!db.objectStoreNames.contains('settings')) {

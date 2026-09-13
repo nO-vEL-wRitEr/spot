@@ -55,6 +55,11 @@
       overflow-x: hidden;
     }
 
+    /* 데모용 화면 바로가기 선택기는 실제 앱 UI에서는 숨깁니다. */
+    body > aside:first-of-type {
+      display: none !important;
+    }
+
     /* Phone Mockup Frame */
     .phone-container {
       width: min(100%, 412px);

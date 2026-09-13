@@ -5,6 +5,7 @@ class AIChat {
     this.aiInsight = aiInsight;
     this.messages = [];
     this.sending = false;
+    this.detailedButton = null;
   }
 
   start() {
@@ -25,6 +26,7 @@ class AIChat {
 
     this.prepareLayout();
     this.prepareLog();
+    this.prepareDetailedButton();
     this.sendButton.type = 'button';
     this.sendButton.setAttribute('aria-label', '메시지 보내기');
     this.sendButton.addEventListener('click', () => this.send());
@@ -69,6 +71,23 @@ class AIChat {
     this.log.id = 'spot-ai-chat-log';
   }
 
+  prepareDetailedButton() {
+    if (this.inputArea.querySelector('#spot-ai-detailed-analysis')) {
+      this.detailedButton = this.inputArea.querySelector('#spot-ai-detailed-analysis');
+      return;
+    }
+
+    const button = document.createElement('button');
+    button.id = 'spot-ai-detailed-analysis';
+    button.type = 'button';
+    button.className = 'w-full mt-2.5 py-2.5 rounded-xl bg-amber-400 text-[#08233D] text-[11.5px] font-black shadow-sm hover:bg-amber-300 active:scale-[0.99] transition';
+    button.textContent = '상세 분석';
+    button.setAttribute('aria-label', '현재 지출 상세 분석');
+    button.addEventListener('click', () => this.runDetailedAnalysis());
+    this.inputArea.appendChild(button);
+    this.detailedButton = button;
+  }
+
   async send() {
     const text = String(this.input.value || '').trim();
     if (!text || this.sending) return;
@@ -80,36 +99,68 @@ class AIChat {
     const thinking = this.addAssistant('지출 데이터를 확인하고 있어요…', true);
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: this.getModel(),
-          summary: this.getSummary(),
-          messages: this.messages.slice(-10)
-        })
-      });
-
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
-
-      const reply = String(data.reply || '').trim();
-      if (!reply) throw new Error('AI 응답이 비어 있습니다.');
-
+      const reply = await this.requestAI(this.messages.slice(-10));
       thinking?.remove();
       this.messages.push({ role: 'assistant', text: reply });
       this.addAssistant(reply);
     } catch (error) {
       console.warn('SPOT AI Chat:', error);
       thinking?.remove();
-      const missingKey = String(error.message || '').includes('GEMINI_API_KEY');
-      this.addAssistant(missingKey
-        ? 'Gemini API 키가 아직 서버에 연결되지 않았어요. Vercel의 GEMINI_API_KEY를 확인해 주세요.'
-        : '지금은 AI 서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.');
+      this.addAssistant(this.errorMessage(error));
     } finally {
       this.setSending(false);
       this.input.focus();
     }
+  }
+
+  async runDetailedAnalysis() {
+    if (this.sending) return;
+
+    const prompt = `현재 등록된 지출 데이터만 근거로 상세 분석을 해주세요.\n반드시 아래 순서와 제목을 그대로 사용해 주세요.\n\n분석을 시작하겠습니다!\n\n(현재 상황)\n현재 지출 규모, 식비 비중, 반복 지출이나 자주 가는 지점을 실제 데이터로 요약하세요.\n\n(문제점과 해결책)\n데이터에서 확인되는 소비 문제를 2~3개 이내로 짚고, 각 문제마다 바로 실행할 수 있는 해결책을 제시하세요.\n\n(간단한 what-if 시나리오)\n실제 데이터로 계산 가능한 범위에서 한 가지 절약 시나리오를 제시하고 예상 절약액을 설명하세요. 계산 근거가 부족하면 임의의 숫자를 만들지 말고 데이터가 더 필요하다고 적으세요.\n\n(실천방법)\n이번 주 바로 실행할 수 있는 행동을 3개 이내로 짧게 정리하세요.\n\n과장하거나 존재하지 않는 결제내역을 만들지 말고, 모바일 화면에서 읽기 좋게 간결하게 작성하세요.`;
+
+    this.setSending(true);
+    const thinking = this.addAssistant('분석을 시작하겠습니다!\n\n등록된 지출 데이터를 정리하고 있어요…', true);
+
+    try {
+      const requestMessages = [...this.messages.slice(-8), { role: 'user', text: prompt }];
+      const reply = await this.requestAI(requestMessages);
+      thinking?.remove();
+      this.messages.push({ role: 'user', text: prompt });
+      this.messages.push({ role: 'assistant', text: reply });
+      this.addAssistant(reply);
+    } catch (error) {
+      console.warn('SPOT AI detailed analysis:', error);
+      thinking?.remove();
+      this.addAssistant(this.errorMessage(error));
+    } finally {
+      this.setSending(false);
+    }
+  }
+
+  async requestAI(messages) {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: this.getModel(),
+        summary: this.getSummary(),
+        messages
+      })
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+
+    const reply = String(data.reply || '').trim();
+    if (!reply) throw new Error('AI 응답이 비어 있습니다.');
+    return reply;
+  }
+
+  errorMessage(error) {
+    const missingKey = String(error?.message || '').includes('GEMINI_API_KEY');
+    return missingKey
+      ? 'Gemini API 키가 아직 서버에 연결되지 않았어요. Vercel의 GEMINI_API_KEY를 확인해 주세요.'
+      : '지금은 AI 서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.';
   }
 
   getSummary() {
@@ -136,6 +187,11 @@ class AIChat {
     this.sendButton.disabled = value;
     this.sendButton.style.opacity = value ? '0.55' : '1';
     this.input.disabled = value;
+    if (this.detailedButton) {
+      this.detailedButton.disabled = value;
+      this.detailedButton.style.opacity = value ? '0.55' : '1';
+      this.detailedButton.style.cursor = value ? 'not-allowed' : 'pointer';
+    }
   }
 
   addUser(text) {
@@ -163,6 +219,8 @@ class AIChat {
     let safe = this.escapeHtml(value);
     safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     safe = safe.replace(/^[-•]\s+/gm, '• ');
+    safe = safe.replace(/^\((현재 상황|문제점과 해결책|간단한 what-if 시나리오|실천방법)\)$/gm, '<strong style="color:#9B701C">($1)</strong>');
+    safe = safe.replace(/^분석을 시작하겠습니다!$/gm, '<strong style="color:#08233D">분석을 시작하겠습니다!</strong>');
     return safe;
   }
 

@@ -121,7 +121,7 @@ class SpotApp {
     this.root.addEventListener('click', this.handleClick);
     this.root.addEventListener('change', this.handleChange);
     this.root.addEventListener('keydown', this.handleKeydown);
-    this.setupAIChat();
+    // AIChat owns the chat controls and conversation history.
     this.router.navigate('view-home');
   }
 

@@ -28,7 +28,7 @@ function buildSystemPrompt(summary) {
 ${JSON.stringify(summary, null, 2)}`;
 }
 
-async function callGemini(apiKey, model, summary, messages) {
+async function callGemini(apiKey, model, summary, messages, retry = false) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
   const recent = Array.isArray(messages) ? messages.slice(-10) : [];
@@ -41,6 +41,11 @@ async function callGemini(apiKey, model, summary, messages) {
     }))
   ];
 
+  if (retry) contents.push({
+    role: 'user',
+    parts: [{ text: '앞선 응답이 출력 한도로 중단되었습니다. 원래 질문에 대한 답변 전체를 핵심 2~3문장으로 다시 작성하세요. 완결된 문장으로 끝내세요.' }]
+  });
+
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -48,7 +53,7 @@ async function callGemini(apiKey, model, summary, messages) {
       contents,
       generationConfig: {
         temperature: 0.45,
-        maxOutputTokens: 1400
+        maxOutputTokens: retry ? 4096 : 2048
       }
     })
   });
@@ -60,9 +65,19 @@ async function callGemini(apiKey, model, summary, messages) {
     throw error;
   }
 
-  const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim() || '';
+  const candidate = data?.candidates?.[0];
+  const finishReason = candidate?.finishReason || 'UNKNOWN';
+  if (finishReason === 'MAX_TOKENS' && !retry) {
+    return callGemini(apiKey, model, summary, messages, true);
+  }
+  if (finishReason !== 'STOP' && finishReason !== 'MAX_TOKENS') {
+    throw new Error('Gemini 응답이 정상적으로 완료되지 않았습니다.');
+  }
+  const text = candidate?.content?.parts
+    ?.filter(p => !p.thought)
+    .map(p => p.text || '').join('').trim() || '';
   if (!text) throw new Error('Gemini 응답이 비어 있습니다.');
-  return text.slice(0, 7000);
+  return { reply: text, finishReason, truncated: finishReason === 'MAX_TOKENS' };
 }
 
 module.exports = async function handler(req, res) {
@@ -94,8 +109,8 @@ module.exports = async function handler(req, res) {
 
   for (const model of fallbackOrder) {
     try {
-      const reply = await callGemini(apiKey, model, summary, messages);
-      return json(res, 200, { model, reply });
+      const result = await callGemini(apiKey, model, summary, messages);
+      return json(res, 200, { model, ...result });
     } catch (error) {
       attempts.push({ model, message: error.message });
       if (![404, 429, 503].includes(error.status)) break;

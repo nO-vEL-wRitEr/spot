@@ -97,8 +97,12 @@ class AIChat {
       if (!reply) throw new Error('AI 응답이 비어 있습니다.');
 
       thinking?.remove();
-      this.messages.push({ role: 'assistant', text: reply });
-      this.addAssistant(reply);
+      if (data.truncated) {
+        this.addAssistant(reply + '\n\n답변이 길이 제한으로 중단됐어요. 질문 범위를 좁혀 다시 요청해 주세요.');
+      } else {
+        this.messages.push({ role: 'assistant', text: reply });
+        this.addAssistant(reply);
+      }
     } catch (error) {
       console.warn('SPOT AI Chat:', error);
       thinking?.remove();

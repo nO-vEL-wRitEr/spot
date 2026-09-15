@@ -21,7 +21,7 @@ function buildSystemPrompt(summary) {
 가능하면 실제 금액, 비율, 카테고리를 근거로 답하세요.
 재정적 결정을 강요하지 말고 소비 습관을 이해하도록 도와주세요.
 답변은 반드시 완결된 문장으로 끝내고, 문장 중간에서 끊지 마세요.
-짧은 질문에는 2~4문장, 분석 요청에는 최대 6~8문장 정도로 답하세요.
+짧은 질문에는 간결하게 답하고, 상세 분석 요청에는 필요한 만큼 자세히 답하세요. 답변 전체는 공백 포함 최대 5000자 이내로 작성하세요.
 마크다운 표는 사용하지 마세요.
 
 현재 지출 집계:
@@ -37,13 +37,13 @@ async function callGemini(apiKey, model, summary, messages, retry = false) {
     { role: 'model', parts: [{ text: '알겠습니다. 제공된 SPOT 지출 데이터만 근거로, 완결된 문장으로 답하겠습니다.' }] },
     ...recent.map(m => ({
       role: m.role === 'assistant' || m.role === 'model' ? 'model' : 'user',
-      parts: [{ text: String(m.text || '').slice(0, 2000) }]
+      parts: [{ text: Array.from(String(m.text || '')).slice(0, 5000).join('') }]
     }))
   ];
 
   if (retry) contents.push({
     role: 'user',
-    parts: [{ text: '앞선 응답이 출력 한도로 중단되었습니다. 원래 질문에 대한 답변 전체를 핵심 2~3문장으로 다시 작성하세요. 완결된 문장으로 끝내세요.' }]
+    parts: [{ text: '앞선 응답이 출력 한도로 중단되었습니다. 원래 질문에 필요한 설명을 유지하며 답변 전체를 5000자 이내로 다시 작성하세요. 완결된 문장으로 끝내세요.' }]
   });
 
   const response = await fetch(url, {
@@ -53,7 +53,7 @@ async function callGemini(apiKey, model, summary, messages, retry = false) {
       contents,
       generationConfig: {
         temperature: 0.45,
-        maxOutputTokens: retry ? 4096 : 2048
+        maxOutputTokens: retry ? 16384 : 8192
       }
     })
   });
@@ -77,7 +77,14 @@ async function callGemini(apiKey, model, summary, messages, retry = false) {
     ?.filter(p => !p.thought)
     .map(p => p.text || '').join('').trim() || '';
   if (!text) throw new Error('Gemini 응답이 비어 있습니다.');
-  return { reply: text, finishReason, truncated: finishReason === 'MAX_TOKENS' };
+  const characters = Array.from(text);
+  const lengthLimited = characters.length > 5000;
+  let reply = characters.slice(0, 5000).join('');
+  if (lengthLimited) {
+    const boundary = Math.max(reply.lastIndexOf('. '), reply.lastIndexOf('.\n'), reply.lastIndexOf('! '), reply.lastIndexOf('? '));
+    if (boundary >= 4000) reply = reply.slice(0, boundary + 1);
+  }
+  return { reply, finishReason, truncated: finishReason === 'MAX_TOKENS' || lengthLimited };
 }
 
 module.exports = async function handler(req, res) {

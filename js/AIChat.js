@@ -10,7 +10,6 @@ class AIChat {
   start() {
     const view = this.root.getElementById('view-ai');
     if (!view || view.dataset.chatEnhanced) return;
-    view.dataset.chatEnhanced = 'true';
 
     this.view = view;
     this.input = view.querySelector('input[placeholder="무엇이든 물어보세요"]') || view.querySelector('input[type="text"]');
@@ -23,13 +22,14 @@ class AIChat {
       return;
     }
 
+    view.dataset.chatEnhanced = 'true';
     this.prepareLayout();
     this.prepareLog();
     this.sendButton.type = 'button';
     this.sendButton.setAttribute('aria-label', '메시지 보내기');
     this.sendButton.addEventListener('click', () => this.send());
     this.input.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
         e.preventDefault();
         this.send();
       }
@@ -46,6 +46,7 @@ class AIChat {
     this.view.style.flexDirection = 'column';
 
     this.log.style.flex = '1 1 0%';
+    this.log.style.display = 'block';
     this.log.style.minHeight = '0';
     this.log.style.overflowY = 'auto';
     this.log.style.overscrollBehavior = 'contain';
